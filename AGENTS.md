@@ -19,7 +19,8 @@ Keep it short: deep explanations belong in `docs/`, linked from the tables below
 | `backend/app/logging/` | Structured JSON logger (`log_config` singleton). |
 | `backend/config/` | Settings + per-environment `.env` files. |
 | `backend/tests/` | pytest suite. |
-| `frontend/` | React + TypeScript (Vite). **Not created yet.** |
+| `frontend/` | React + TypeScript (Vite). Scaffolded; typed API client, no screens yet. |
+| `frontend/src/api/` | The only place `fetch` is called. Money crosses the wire as a **string**. |
 | `docs/` | Normative guides. Read before touching the matching area. |
 | `docs/plans/` | Dated proposals. Non-normative. Delete once shipped. |
 

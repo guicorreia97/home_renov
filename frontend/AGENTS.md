@@ -3,10 +3,10 @@
 Scoped rules for the React + TypeScript client. The root `AGENTS.md` still
 applies; this adds what is only true here. `CLAUDE.md` is a symlink to this file.
 
-**Status: scaffolded, no screens yet.** The Vite app, the Tailwind token layer
-and the `src/` folders below all exist. Build screens inside them — do not
-re-scaffold, do not invent a different structure, and do not fake API data to
-move on.
+**Status: scaffolded and wired to the API, no screens yet.** The Vite app, the
+Tailwind token layer, the typed API client and the backend types all exist and
+are verified against the running service. Build screens on top of them — do not
+re-scaffold, do not add a second HTTP layer, and do not fake API data to move on.
 
 ## Stack
 
@@ -18,11 +18,11 @@ in `backend/app/api/main.py`), so do not change the port without changing CORS.
 
 | Path | Purpose |
 |---|---|
-| `src/api/` | Typed API client. The **only** place `fetch` is called. |
+| `src/api/` | Typed API client. `client.ts` is the **only** place `fetch` is called. |
 | `src/components/` | Reusable presentational components. |
 | `src/features/<name>/` | A screen and the pieces only it uses (`budget/`, `expenses/`). |
 | `src/types/` | Types mirroring the backend Pydantic models. |
-| `src/lib/` | Small helpers (formatting, hooks). |
+| `src/lib/` | Small helpers. `format.ts` renders money, dates and enum labels. |
 | `tailwind.config.js` | The design tokens as Tailwind classes. Mirrors the guide. |
 | `src/index.css` | The same tokens as CSS custom properties, plus base styles. |
 
@@ -79,8 +79,33 @@ Base URL from `VITE_API_URL`, default `http://localhost:8000`.
 | `GET /expenses`, `POST /expenses` | List and create. |
 | `GET|PATCH|DELETE /expenses/{id}` | Single expense. |
 
-Money crosses the wire in the backend's `Money` shape (`app/src/models/money.py`)
-— read it before formatting currency; do not do float math on amounts.
+### Money is a string, always
+
+Amounts are `Decimal` server-side and Pydantic serialises them to JSON
+**strings** — `"250.50"`, never `250.5`. `Money` in `src/types/money.ts` is
+therefore `string`, which makes the dangerous line a compile error:
+
+```ts
+const total = a.amount + b.amount   // type error, and correctly so
+```
+
+Never `Number()` an amount except at the moment of display (`formatMoney`).
+Never sum, compare or forecast amounts in the client — `GET /budget/summary`
+returns every total already computed on exact decimals. Two sources of truth
+for the same figure will drift, and the one built on floats is the wrong one.
+
+`budget_used_percent` is a genuine `number`: it is a ratio, not an amount.
+
+### Error shape
+
+FastAPI returns `{"detail": ...}` where `detail` is a **string** for the
+handlers' own errors and an **array of objects** for 422 validation failures.
+`ApiError` normalises both into a readable `message`; components should render
+`error.message` and never reach into `detail`. `ApiError.status === 0` means the
+request never arrived — the API is down, or CORS refused it. The browser
+deliberately makes those two indistinguishable.
+
+`GET /healthcheck` returns `{"message": "OK"}` — not `{"status": ...}`.
 
 ## Delegation
 
@@ -94,3 +119,9 @@ Append here when a mistake happens twice. One line each.
 
 - The dev server port is pinned by backend CORS — changing it breaks every
   request with an opaque browser error, not a 4xx.
+- A stale `uvicorn` left on :8000 serves the routes it was started with, so new
+  endpoints 404 while `/healthcheck` still answers. `make run` then fails with
+  "address already in use" and the browser keeps talking to the old process.
+  Check `lsof -nP -iTCP:8000 -sTCP:LISTEN` before believing a 404.
+- The healthcheck payload is `{"message": "OK"}`; assuming `{"status": "ok"}`
+  type-checks fine and fails only at runtime.
