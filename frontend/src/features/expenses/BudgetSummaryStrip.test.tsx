@@ -19,6 +19,15 @@ function renderStrip(props: Partial<Parameters<typeof BudgetSummaryStrip>[0]> = 
   return { onEditBudget }
 }
 
+/** The conclusion renders label, then amount, then the bar — not a dt/dd pair. */
+function amountFor(label: string): Element | null | undefined {
+  return screen.getByText(label).parentElement?.nextElementSibling
+}
+
+function barFill(): Element | undefined {
+  return Array.from(document.querySelectorAll('div[aria-hidden="true"] > div')).at(0)
+}
+
 describe('BudgetSummaryStrip', () => {
   it('shows the headline figures', () => {
     renderStrip()
@@ -30,19 +39,72 @@ describe('BudgetSummaryStrip', () => {
 
   it('shows the remaining budget in the success tone when under budget', () => {
     renderStrip({
-      summary: aSummary({ remaining_budget: '48765.50', over_budget: false }),
+      summary: aSummary({ remaining_budget: '48765.50', over_budget: false, budget_used_percent: 2.5 }),
     })
 
-    const figure = screen.getByText('Remaining budget').nextElementSibling
-    expect(figure?.className).toContain('text-success')
+    expect(screen.getByText('Remaining budget')).toBeInTheDocument()
+    expect(amountFor('Remaining budget')?.className).toContain('text-success')
   })
 
   it('switches to "Over budget by" in the danger tone when over', () => {
-    renderStrip({ summary: aSummary({ remaining_budget: '-500.00', over_budget: true }) })
+    renderStrip({
+      summary: aSummary({ remaining_budget: '-500.00', over_budget: true, budget_used_percent: 101 }),
+    })
 
     expect(screen.queryByText('Remaining budget')).not.toBeInTheDocument()
-    const figure = screen.getByText('Over budget by').nextElementSibling
-    expect(figure?.className).toContain('text-danger')
+    expect(amountFor('Over budget by')?.className).toContain('text-danger')
+  })
+
+  it('states the percentage of the budget used, which the API computed all along', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 4.22 }) })
+
+    expect(screen.getByText('4.2% of budget used')).toBeInTheDocument()
+  })
+
+  it('fills the bar to the percentage used, in the matching tone', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 42, over_budget: false }) })
+
+    const fill = barFill()
+    expect(fill).toHaveStyle({ width: '42%' })
+    expect(fill?.className).toContain('bg-success')
+  })
+
+  it('warns before the budget is gone, not only after', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 85, over_budget: false }) })
+
+    expect(barFill()?.className).toContain('bg-warning')
+  })
+
+  it('caps the bar at full when spend has run past the budget', () => {
+    renderStrip({
+      summary: aSummary({ budget_used_percent: 240, over_budget: true, remaining_budget: '-70000.00' }),
+    })
+
+    const fill = barFill()
+    expect(fill).toHaveStyle({ width: '100%' })
+    expect(fill?.className).toContain('bg-danger')
+  })
+
+  it('never paints the bar with the accent, which belongs to the primary action', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 42 }) })
+
+    expect(barFill()?.className).not.toContain('accent')
+  })
+
+  it('still shows the remaining figure when the API sends no percentage', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: null }) })
+
+    expect(screen.getByText('Remaining budget')).toBeInTheDocument()
+    expect(screen.queryByText(/of budget used/)).not.toBeInTheDocument()
+  })
+
+  it('shows no conclusion at all when there is no budget to conclude against', () => {
+    renderStrip({
+      summary: aSummary({ planned_budget: null, remaining_budget: null, budget_used_percent: null }),
+    })
+
+    expect(screen.queryByText('Remaining budget')).not.toBeInTheDocument()
+    expect(barFill()).toBeUndefined()
   })
 
   it('tells the user what to do when no budget is set, instead of showing a blank', () => {

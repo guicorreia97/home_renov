@@ -1,6 +1,8 @@
 import { Button } from '../../components/Button'
 import { formatMoney } from '../../lib/format'
 import type { BudgetSummary, Money, SignedMoney } from '../../types'
+import type { RemainingConclusion, RemainingConclusionTone } from './RemainingBudgetConclusion'
+import { RemainingConclusionBlock } from './RemainingBudgetConclusion'
 
 export interface BudgetSummaryStripProps {
   summary: BudgetSummary | null
@@ -73,14 +75,22 @@ function buildSpendFigures(summary: BudgetSummary): Figure[] {
   ]
 }
 
-function buildRemainingFigure(summary: BudgetSummary): Figure | null {
+/** Builds the closing "remaining budget" figure, or null when there is no budget to close against. */
+function buildRemainingConclusion(summary: BudgetSummary): RemainingConclusion | null {
   if (summary.planned_budget === null || summary.remaining_budget === null) {
     return null
   }
+  const percent = summary.budget_used_percent
+  const tone: RemainingConclusionTone = summary.over_budget
+    ? 'danger'
+    : percent !== null && percent >= 80
+      ? 'warning'
+      : 'success'
   return {
     label: summary.over_budget ? 'Over budget by' : 'Remaining budget',
-    value: formatMoney(summary.remaining_budget, summary.currency),
-    tone: summary.over_budget ? 'danger' : 'success',
+    amount: formatMoney(summary.remaining_budget, summary.currency),
+    percent,
+    tone,
   }
 }
 
@@ -94,7 +104,7 @@ export function BudgetSummaryStrip({
   onEditBudget,
 }: BudgetSummaryStripProps) {
   const editDisabled = budgetLoading || !!budgetError
-  const remaining = summary ? buildRemainingFigure(summary) : null
+  const remaining = summary ? buildRemainingConclusion(summary) : null
 
   return (
     <section className="rounded-card border border-border bg-surface p-6" aria-label="Budget summary">
@@ -134,11 +144,7 @@ export function BudgetSummaryStrip({
               </div>
             </div>
 
-            {remaining && (
-              <div className="border-t border-border pt-4">
-                <FigureRow figures={[remaining]} />
-              </div>
-            )}
+            {remaining && <RemainingConclusionBlock conclusion={remaining} />}
           </div>
         )}
       </div>

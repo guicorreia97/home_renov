@@ -12,6 +12,7 @@ export interface ExpenseTableProps {
   onEdit: (expense: Expense) => void
   onDelete: (expense: Expense) => void
   onAddFirst: () => void
+  onRetry: () => void
 }
 
 const HEADERS = ['Description', 'Category', 'Payee', 'Incurred on', 'Status', 'Amount', '']
@@ -25,9 +26,17 @@ export function ExpenseTable({
   onEdit,
   onDelete,
   onAddFirst,
+  onRetry,
 }: ExpenseTableProps) {
   if (error) {
-    return <p className="text-body text-danger">{error}</p>
+    return (
+      <div className="rounded-card border border-border bg-surface p-6">
+        <p className="text-body text-danger">{error}</p>
+        <Button variant="secondary" onClick={onRetry} className="mt-4">
+          Try again
+        </Button>
+      </div>
+    )
   }
 
   if (allExpenses === null) {

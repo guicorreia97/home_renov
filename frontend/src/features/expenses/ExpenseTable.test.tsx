@@ -7,6 +7,7 @@ function renderTable(props: Partial<Parameters<typeof ExpenseTable>[0]> = {}) {
   const onEdit = vi.fn()
   const onDelete = vi.fn()
   const onAddFirst = vi.fn()
+  const onRetry = vi.fn()
   const expenses = [anExpense()]
   render(
     <ExpenseTable
@@ -17,10 +18,11 @@ function renderTable(props: Partial<Parameters<typeof ExpenseTable>[0]> = {}) {
       onEdit={onEdit}
       onDelete={onDelete}
       onAddFirst={onAddFirst}
+      onRetry={onRetry}
       {...props}
     />,
   )
-  return { onEdit, onDelete, onAddFirst }
+  return { onEdit, onDelete, onAddFirst, onRetry }
 }
 
 describe('ExpenseTable', () => {
@@ -44,6 +46,21 @@ describe('ExpenseTable', () => {
 
     expect(screen.getByText('Could not reach the API')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('offers a way out of the error without reloading the page', async () => {
+    const { onRetry } = renderTable({ error: 'Could not reach the API' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(onRetry).toHaveBeenCalledOnce()
+  })
+
+  it('does not offer the empty-state CTA in place of the error', () => {
+    renderTable({ allExpenses: [], visible: [], error: 'Could not reach the API' })
+
+    expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/No expenses recorded yet/i)).not.toBeInTheDocument()
   })
 
   it('offers a real next action when there are no expenses at all', async () => {

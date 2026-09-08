@@ -140,6 +140,27 @@ describe('ExpensesScreen', () => {
     expect(accents).toHaveLength(1)
   })
 
+  it('recovers from a failed list without a page reload', async () => {
+    const user = userEvent.setup()
+    stubApi({
+      'GET /expenses': [
+        { status: 503, body: { detail: 'Service unavailable' } },
+        { body: [WORKTOP] },
+      ],
+      'GET /budget': { body: aBudget() },
+      'GET /budget/summary': { body: aSummary() },
+    })
+
+    render(<ExpensesScreen />)
+
+    expect(await screen.findByText('Service unavailable')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(await screen.findByText('Kitchen worktop')).toBeInTheDocument()
+    expect(screen.queryByText('Service unavailable')).not.toBeInTheDocument()
+  })
+
   it('keeps the table usable when the summary request fails', async () => {
     stubApi({
       'GET /expenses': { body: [WORKTOP] },

@@ -101,6 +101,7 @@ export default function ExpensesScreen() {
           onEdit={(expense) => setModal({ kind: 'form', editing: expense })}
           onDelete={(expense) => setModal({ kind: 'delete', expense })}
           onAddFirst={() => setModal({ kind: 'form', editing: null })}
+          onRetry={refresh}
         />
       </div>
 
