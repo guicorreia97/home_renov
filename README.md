@@ -9,7 +9,8 @@ accounts, no marketplace.
 - **Backend** — FastAPI on Python 3.11, run by uvicorn, dependencies via `uv`.
 - **Storage** — JSON files on disk in v1, behind a repository interface;
   MongoDB later.
-- **Frontend** — React + TypeScript on Vite (not created yet).
+- **Frontend** — React 18 + TypeScript on Vite, styled with Tailwind against the
+  design tokens in `docs/design-system-guide.md`.
 
 ## Quick start
 
@@ -21,6 +22,20 @@ make hooks      # one-time: activate the pre-commit hook
 ```
 
 Interactive API docs at http://localhost:8000/docs once running.
+
+The frontend is a separate npm project; `make check` covers the backend only.
+
+```bash
+cd frontend
+npm install     # first time only
+npm run dev     # http://localhost:5173 — needs `make run` in another terminal
+npm run build   # production build; also type-checks
+npm run lint    # oxlint, including the jsx-a11y accessibility rules
+```
+
+The dev port is pinned to 5173 because the backend's CORS allowlist names that
+origin exactly. Changing it breaks every request with an opaque browser error
+rather than a clean 4xx.
 
 `make check` requires [gitleaks](https://github.com/gitleaks/gitleaks) for the
 secret scan: `brew install gitleaks`, or grab the binary from its releases page.
