@@ -31,6 +31,15 @@ Dark is the only theme in v1. Define these as CSS custom properties on `:root`.
 | `--success` | `#6BA368` | Done, complete, under budget. |
 | `--warning` | `#D9A441` | At risk, approaching budget. |
 | `--danger` | `#C25B4E` | Blocked, over budget, destructive. |
+| `--overlay` | `rgba(20, 17, 15, 0.8)` | Backdrop behind a modal, dimming the screen beneath it. |
+| `--success-soft` | `#2A2F23` | Success badge fill — `--success` blended ~15% over `--surface`. |
+| `--warning-soft` | `#3A2F1D` | Warning badge fill — `--warning` blended ~15% over `--surface`. |
+| `--danger-soft` | `#37241F` | Danger badge fill — `--danger` blended ~15% over `--surface`. |
+
+The soft tokens exist because Tailwind's `/opacity` modifier needs a color defined
+in an alpha-capable format; ours are plain hex custom properties, so a genuine
+15%-opacity fill is precomputed as its own solid token instead — same pattern as
+`--accent-soft`.
 
 Rules: the accent appears **once per view** as the primary action — a screen with
 three terracotta buttons has no primary action. Status colors are reserved for
@@ -58,6 +67,19 @@ Never go below 13px. Body text is never `--text-faint`.
 - Card padding 24px; card gap 16px; section gap 32px.
 - Radii: 8px inputs and buttons, 12px cards, 999px pills and badges.
 - Max content width 1200px, centered.
+
+## Layout tokens
+
+Structural sizing constants that are not spacing (margin/padding/gap) but still
+need a named value instead of an arbitrary one-off in a component. Defined
+under `theme.extend` in `tailwind.config.js`, alongside the 1200px content
+width above.
+
+| Token | Value | Use |
+|---|---|---|
+| `max-w-modal` | 480px | Modal panel width. |
+| `max-h-modal` | 85vh | Modal panel max height before its body scrolls. |
+| `min-w-field` | 160px | Minimum width for an inline filter/select so it doesn't collapse below a usable size. |
 
 ## Elevation & motion
 

@@ -31,7 +31,11 @@ npm install     # first time only
 npm run dev     # http://localhost:5173 — needs `make run` in another terminal
 npm run build   # production build; also type-checks
 npm run lint    # oxlint, including the jsx-a11y accessibility rules
+npm test        # vitest + React Testing Library (npm run test:watch while working)
 ```
+
+There are two gates, not one: `make check` for the backend, `npm test` for the
+frontend. Both must pass. See `docs/testing-guide.md`.
 
 The dev port is pinned to 5173 because the backend's CORS allowlist names that
 origin exactly. Changing it breaks every request with an opaque browser error
