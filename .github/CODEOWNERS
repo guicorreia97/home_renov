@@ -1,0 +1,13 @@
+# Agent-control files. Changes here alter how every agent behaves in this repo,
+# so they get an explicit owner and their own review.
+/AGENTS.md              @guicorreia97
+/CLAUDE.md              @guicorreia97
+/ARCHITECTURE-DECISIONS.md @guicorreia97
+/.claude/               @guicorreia97
+/.agents/               @guicorreia97
+/.github/               @guicorreia97
+/Makefile               @guicorreia97
+/.githooks/             @guicorreia97
+
+# Normative guides — an agent changing its own rules needs a human in the loop.
+/docs/                  @guicorreia97
