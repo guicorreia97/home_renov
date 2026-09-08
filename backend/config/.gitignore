@@ -1,0 +1,6 @@
+# Per-environment files hold real credentials — never tracked.
+envs/.env*
+
+# Exceptions: the template, and dummy testing values so CI can boot the app.
+!envs/.env.example
+!envs/.env.testing
