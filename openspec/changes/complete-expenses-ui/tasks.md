@@ -99,6 +99,23 @@ The frontend work is untracked and unreviewed. Judge it before building on it.
       dash. `projected_profit` stays `text-text`: the guide reserves status
       colors for status, so a positive profit is not green.
 
+- [x] 3.9 **Spec gap found 2026-09-09**, verifying the completion checklist
+      rather than assuming it. `budget_used_percent` was never rendered
+      anywhere in the app — the backend computed it on every request and the
+      UI discarded it — while the delta spec requires the strip to show "a
+      real `budget_used_percent` rather than an empty figure". Adds it as a
+      spend progress bar forming the card's conclusion, with the
+      remaining/over-budget figure moved into that block so it is not stated
+      twice. Bar tone follows the guide's own token semantics: `--success`
+      under budget, `--warning` approaching (>= 80%), `--danger` over. The
+      accent is not used — it belongs to the primary action. Layout approved
+      from a design canvas before any JSX was written.
+- [x] 3.10 **Spec gap found 2026-09-09.** The delta spec requires the failed
+      list to show "an error state with a retry action"; `ExpenseTable`
+      rendered a bare red sentence, so the only recovery was a page reload.
+      Adds a secondary "Try again" button wired to the `refresh` the data hook
+      already exposed.
+
 **Quality Gate:**
 - [x] `npm test` passes
 - [x] oxlint jsx-a11y rules clean
@@ -114,12 +131,12 @@ The frontend work is untracked and unreviewed. Judge it before building on it.
       an empty JSON store and on a populated one
 - [x] 4.3 Confirm no console errors and no unhandled promise rejections
 - [x] 4.4 Update `README.md` with the `npm test` command
-- [ ] 4.5 Commit in conventional-commit slices; `feat(frontend)` for the screens,
+- [x] 4.5 Commit in conventional-commit slices; `feat(frontend)` for the screens,
       `test(frontend)` for the suite, `docs:` for the guides
-- [ ] 4.6 Second `reviewer` pass over the full branch diff
+- [x] 4.6 Second `reviewer` pass over the full branch diff
 
 **Quality Gate:**
-- [ ] All tests pass — `make check` and `npm test`
+- [x] All tests pass — `make check` and `npm test`
 - [x] `npm run build` clean
 - [ ] Documentation synced
 
