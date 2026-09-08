@@ -42,6 +42,11 @@ export default {
       success: 'var(--success)',
       warning: 'var(--warning)',
       danger: 'var(--danger)',
+      'success-soft': 'var(--success-soft)',
+      'warning-soft': 'var(--warning-soft)',
+      'danger-soft': 'var(--danger-soft)',
+
+      overlay: 'var(--overlay)',
     },
 
     // The 8pt grid, verbatim. 0 and 1px are kept for hairlines and resets.
@@ -89,6 +94,13 @@ export default {
     extend: {
       maxWidth: {
         content: '1200px',
+        modal: '480px',
+      },
+      maxHeight: {
+        modal: '85vh',
+      },
+      minWidth: {
+        field: '160px',
       },
       // Dark UIs separate layers with surface lightness, not shadow. The single
       // allowed shadow is reserved for genuinely floating elements.

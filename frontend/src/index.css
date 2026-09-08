@@ -35,6 +35,16 @@
     --warning: #d9a441;
     --danger: #c25b4e;
 
+    /* Backdrop behind a modal. */
+    --overlay: rgba(20, 17, 15, 0.8);
+
+    /* Status colors blended ~15% over --surface, for badge fills. Tailwind's
+       opacity modifier needs an alpha-capable color format; these are plain
+       hex, so the tint is precomputed instead — same pattern as --accent-soft. */
+    --success-soft: #2a2f23;
+    --warning-soft: #3a2f1d;
+    --danger-soft: #37241f;
+
     /* Dark is the only theme in v1; this keeps form controls and scrollbars
        from rendering in the browser's light defaults. */
     color-scheme: dark;

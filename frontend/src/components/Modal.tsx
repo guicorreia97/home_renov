@@ -48,7 +48,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
       ref={dialogRef}
       onCancel={handleCancel}
       aria-labelledby={titleId}
-      className="max-h-[85vh] w-full max-w-[480px] overflow-y-auto rounded-card border border-border bg-surface p-6 text-text shadow-floating backdrop:bg-overlay"
+      className="max-h-modal w-full max-w-modal overflow-y-auto rounded-card border border-border bg-surface p-6 text-text shadow-floating backdrop:bg-overlay"
     >
       <h2 id={titleId} className="text-card-title text-text">
         {title}
