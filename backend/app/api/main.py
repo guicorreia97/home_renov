@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import health_check
+from app.api.endpoints import budget, expenses, health_check
 from app.logging.log_config import log_config
 from config.settings import settings
 
@@ -24,6 +24,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health_check.router, tags=["healthcheck"])
+app.include_router(expenses.router, tags=["expenses"])
+app.include_router(budget.router, tags=["budget"])
 
 
 @app.get("/", status_code=status.HTTP_200_OK)

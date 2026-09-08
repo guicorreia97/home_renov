@@ -11,3 +11,6 @@ Thumbs.db
 # Node (frontend, once it exists)
 node_modules/
 dist/
+
+# Local JSON store — local state, never committed.
+data/
