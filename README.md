@@ -16,11 +16,14 @@ accounts, no marketplace.
 ```bash
 make install    # uv sync the backend
 make run        # start the API on http://localhost:8000
-make check      # the quality gate: lint + format + tests
+make check      # the quality gate: lint + format + secret scan + tests
 make hooks      # one-time: activate the pre-commit hook
 ```
 
 Interactive API docs at http://localhost:8000/docs once running.
+
+`make check` requires [gitleaks](https://github.com/gitleaks/gitleaks) for the
+secret scan: `brew install gitleaks`, or grab the binary from its releases page.
 
 ## Working in this repo
 

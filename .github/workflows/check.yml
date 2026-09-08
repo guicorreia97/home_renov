@@ -12,6 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history so the secret scan can inspect past commits, not just
+          # the tip. A credential committed earlier and reverted is still leaked.
+          fetch-depth: 0
+
+      # Installs the MIT-licensed binary directly. The official gitleaks Action
+      # requires a paid license for organization-owned repos; this does not.
+      - name: Install gitleaks
+        run: |
+          VERSION=8.30.1
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -23,3 +38,6 @@ jobs:
 
       - name: Run quality gate
         run: make check
+
+      - name: Scan git history for secrets
+        run: make secrets-history

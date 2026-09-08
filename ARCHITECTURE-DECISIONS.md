@@ -74,3 +74,30 @@ skeleton, three synchronized documents per feature would cost more than the code
 and a stale contract is worse than none. `docs/plans/` covers proposals for now.
 **Revisit when:** features stabilize and the team grows past one person —
 OpenSpec or similar is the intended path.
+
+---
+
+### ADR-007 — gitleaks in the gate, not GitHub secret scanning
+**Status:** Accepted · **Date:** 2026-09-08
+
+Secret detection runs as part of `make check` (pre-commit) and again in CI,
+using the gitleaks CLI plus ruff `S105`-`S107`. Before this, the harness had no
+content-based secret detection at all: a file containing a live-format Stripe
+key, an AWS secret and a hardcoded production database password passed the gate
+and committed cleanly. Protection was purely path-based via `.gitignore`.
+
+GitHub's push protection was the alternative, but it requires GitHub Secret
+Protection (billed per committer) on private repos, only fires at push time
+rather than before the commit exists, and matches vendor token formats only —
+it would not have caught the `postgres://user:pass@host` case. gitleaks is MIT,
+free, runs in ~30ms, and catches all of it. The binary is installed directly in
+CI rather than via the official Action, which requires a paid license for
+organization-owned repos.
+
+Two custom rules were added after verifying the bundled ruleset missed them:
+bare AWS access key IDs, and passwords embedded in connection URIs.
+
+**Revisit when:** the repo moves to an organization with GitHub Advanced
+Security already paid for — push protection then adds a server-side backstop
+that a local hook cannot provide, and should run alongside this rather than
+replace it.

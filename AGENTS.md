@@ -31,11 +31,17 @@ Run from the repo root. `make check` is the definition of "done".
 |---|---|
 | `make install` | `uv sync` the backend. |
 | `make run` | Start the API on :8000. |
-| `make check` | **The quality gate**: ruff lint + format check + pytest. |
+| `make check` | **The quality gate**: ruff lint + format + secret scan + pytest. |
 | `make fmt` | Auto-fix formatting and safe lint errors. |
 | `make test` | pytest only. |
+| `make secrets` | Scan the working tree for credentials (gitleaks). |
+| `make secrets-history` | Scan the full git history. Slower; run after imports. |
 | `make hooks` | One-time: activate the tracked pre-commit hook. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
+
+`make check` needs `gitleaks` installed (`brew install gitleaks`, or the binary
+from its releases page). It fails loudly if missing rather than skipping the
+scan — a gate that silently does nothing is worse than no gate.
 
 Never invoke `pip`, `poetry`, or a bare `python`. Dependencies are managed by
 `uv` only: `cd backend && uv add <pkg>` (or `uv add --dev <pkg>`).
@@ -60,7 +66,11 @@ These are invariants. Breaking one is a defect even if tests pass.
    incomplete work. → `docs/testing-guide.md`
 6. **Secrets never enter git.** Real credentials live only in untracked
    `config/envs/.env.<env>` files. `.env.example` and `.env.testing` are
-   committed and must contain dummy values only.
+   committed and **allowlisted in `.gitleaks.toml`**, so a real credential
+   placed there is scanned by nothing — they must hold dummy values only.
+   Never hardcode a credential in source: `make check` runs gitleaks plus ruff
+   `S105`-`S107`, and neither may be silenced to get a commit through.
+   → `docs/secrets-guide.md`
 7. **The frontend follows the design system.** Colors, spacing and component
    shapes come from `docs/design-system-guide.md` — do not invent new tokens.
 8. **Never modify agent-control files unless explicitly asked** — `AGENTS.md`,
@@ -77,6 +87,7 @@ Read the doc before starting; do not infer the convention from surrounding code.
 | Anything that reads or writes stored data | `docs/persistence-guide.md` |
 | Writing or changing tests | `docs/testing-guide.md` |
 | Any UI work, any component, any styling | `docs/design-system-guide.md` |
+| Handling any credential, token, or connection string | `docs/secrets-guide.md` |
 | Choosing between two viable architectures | `ARCHITECTURE-DECISIONS.md` |
 
 ## Delegation rule
@@ -107,6 +118,9 @@ job needs.
   loosen a lint rule, delete a failing test, or add `# noqa` to make the gate
   pass. If a rule is genuinely wrong, say so and ask.
 - **Observability:** structured logs only; never log user content (rule 4).
+- **Secrets:** never paste a real credential into a tracked file, a commit
+  message, or a log line. If you find one already committed, stop and tell the
+  user it must be rotated — removing it from the working tree does not unleak it.
 - **Git:** work on a branch. Conventional Commits (`feat:`, `fix:`, `chore:`,
   `docs:`, `test:`, `refactor:`). **Never push and never open a PR** unless
   explicitly asked. → `.agents/skills/commit-messages/SKILL.md`
@@ -123,5 +137,8 @@ Append here when a mistake happens twice. Keep entries one line.
 - `config/settings.py` resolves `.env` paths **relative to the working
   directory**, so backend commands must run from `backend/`. The `Makefile`
   handles this; do not run `pytest` from the repo root.
+- `.env.example` and `.env.testing` are gitleaks-allowlisted by path, so the
+  scanner will not save you there — they are the one place a real secret can be
+  committed silently.
 - The app will not boot if `config/envs/.env.<APP_ENV>` is missing — it raises
   `FileNotFoundError` at import time, not a clean startup error.

@@ -1,0 +1,60 @@
+# Secret scanning config. Runs as part of `make check`, so it gates every
+# commit locally and every push in CI.
+#
+# Start from the bundled ruleset (~150 provider token patterns), then add what
+# is specific to this project.
+[extend]
+useDefault = true
+
+# --- Project-specific rules -------------------------------------------------
+
+# Credentials embedded in a connection string. The default ruleset does not
+# cover these: they match no vendor token format, which is exactly how a
+# hardcoded "postgres://admin:hunter2@prod-db/renov" slips through unnoticed.
+[[rules]]
+id = "connection-string-password"
+description = "Password embedded in a database or service connection URI"
+regex = '''(?i)\b(?:postgres|postgresql|mongodb(?:\+srv)?|mysql|redis|amqp|https?)://[^\s:@/]+:([^\s:@/]{3,})@'''
+secretGroup = 1
+tags = ["password", "connection-string"]
+
+[rules.allowlist]
+# Placeholders that are obviously not real credentials.
+regexes = [
+  '''(?i):(\*{3,}|x{3,}|<[^>]+>|\$\{[^}]+\}|password|pass|changeme|placeholder|your[-_]?password)@''',
+]
+
+# AWS access key IDs. Verified against gitleaks 8.30: the bundled ruleset does
+# not flag a bare AKIA/ASIA identifier on its own, and an AWS key ID is too
+# common a leak to rely on the generic high-entropy rule catching it.
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS access key ID"
+regex = '''\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16})\b'''
+secretGroup = 1
+tags = ["aws", "key-id"]
+
+[rules.allowlist]
+# The identifiers AWS itself publishes in its documentation.
+regexes = [
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''ASIAIOSFODNN7EXAMPLE''',
+]
+
+# --- Global allowlist -------------------------------------------------------
+
+[allowlist]
+description = "Files that hold deliberate dummy values, plus generated artifacts"
+
+paths = [
+  # Committed on purpose with fake values so tests and CI can boot the app.
+  # See docs/backend-guide.md. Real credentials never belong in these.
+  '''backend/config/envs/\.env\.example$''',
+  '''backend/config/envs/\.env\.testing$''',
+
+  # Lockfile: hashes and URLs, no credentials, and very noisy to scan.
+  '''backend/uv\.lock$''',
+
+  # This file: its own regexes look like the things they match.
+  '''\.gitleaks\.toml$''',
+]
