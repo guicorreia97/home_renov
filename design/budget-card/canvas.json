@@ -1,0 +1,12 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1040, "h": 500, "title": "Budget set — healthy" },
+    { "file": "NoBudget.dc.html", "x": 1120, "y": 0, "w": 1040, "h": 500, "title": "No budget set yet" },
+    { "file": "OverBudget.dc.html", "x": 2240, "y": 0, "w": 1040, "h": 500, "title": "Over budget" }
+  ],
+  "annotations": [
+    { "id": "bar-note", "x": 0, "y": -150, "w": 480, "text": "The bar is the card's conclusion, not a repeat of it.\nDrag the Spend tweak on the first artboard to watch it cross into warning (80%) and danger (100%)." },
+    { "id": "token-note", "x": 2240, "y": -150, "w": 480, "text": "Bar colour follows the guide's own token semantics: --success is \"under budget\", --warning \"approaching budget\", --danger \"over budget\". The accent stays reserved for the primary action." }
+  ],
+  "launch": { "view": "canvas" }
+}

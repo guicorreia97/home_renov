@@ -14,3 +14,7 @@ dist/
 
 # Local JSON store — local state, never committed.
 data/
+
+# Seeded design-canvas output. The editor is baked into it (~2.4 MB) and it is
+# regenerated from the .dc.html sources beside it — those are the real source.
+design/**/*-states.html

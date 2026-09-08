@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #14110F; }
+    a { color: #D97843; } a:hover { color: #E68A55; }
+  </style>
+</helmet>
+<div style="padding: 32px; background: #14110F;">
+  <section style="border: 1px solid #3A322E; border-radius: 12px; background: #1E1A17; padding: 24px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: #F2EDE8;">Budget</h2>
+      <button style="font-family: inherit; font-size: 15px; font-weight: 500; color: #A79B92; background: transparent; border: 0; border-radius: 8px; padding: 10px 16px; min-height: 40px; cursor: pointer;">Edit budget</button>
+    </div>
+
+    <p style="margin: 24px 0 0 0; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #A79B92;">Targets</p>
+    <dl style="display: flex; flex-wrap: wrap; gap: 32px; margin: 8px 0 0 0;">
+      <div>
+        <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Planned budget</dt>
+        <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #6E635C;">—</dd>
+      </div>
+      <div>
+        <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Purchase price</dt>
+        <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #6E635C;">—</dd>
+      </div>
+      <div>
+        <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Target sale price</dt>
+        <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #6E635C;">—</dd>
+      </div>
+      <div>
+        <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Projected profit</dt>
+        <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #6E635C;">—</dd>
+      </div>
+    </dl>
+
+    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #3A322E;">
+      <p style="margin: 0; font-size: 13px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #A79B92;">Spend</p>
+      <dl style="display: flex; flex-wrap: wrap; gap: 32px; margin: 8px 0 0 0;">
+        <div>
+          <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Expenses recorded</dt>
+          <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #F2EDE8;">3</dd>
+        </div>
+        <div>
+          <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Total paid</dt>
+          <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #F2EDE8;">2 000,00 €</dd>
+        </div>
+        <div>
+          <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Total committed</dt>
+          <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #F2EDE8;">2 100,00 €</dd>
+        </div>
+        <div>
+          <dt style="font-size: 13px; font-weight: 500; color: #A79B92;">Total forecast</dt>
+          <dd style="margin: 4px 0 0 0; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; color: #F2EDE8;">2 110,00 €</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #3A322E;">
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #F2EDE8;">No budget is set yet.</p>
+      <p style="margin: 4px 0 0 0; font-size: 15px; line-height: 1.6; color: #A79B92;">Set a planned budget to track spend against it and see how much is left.</p>
+      <button style="margin-top: 16px; font-family: inherit; font-size: 15px; font-weight: 500; color: #F2EDE8; background: transparent; border: 1px solid #3A322E; border-radius: 8px; padding: 10px 16px; min-height: 40px; cursor: pointer;">Set a budget</button>
+    </div>
+
+  </section>
+</div>
+</x-dc>
+</body>
+</html>
