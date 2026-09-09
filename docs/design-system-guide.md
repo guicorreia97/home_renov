@@ -45,6 +45,19 @@ Rules: the accent appears **once per view** as the primary action — a screen w
 three terracotta buttons has no primary action. Status colors are reserved for
 status; never use `--success` merely because a thing is positive.
 
+**Budget thresholds.** "Approaching" and "over" are specific numbers, so that
+two screens showing the same spend never disagree about its colour:
+
+| Share of the planned budget forecast | Token |
+|---|---|
+| under 80% | `--success` |
+| 80% to under 90% | `--warning` |
+| 90% and over, or the API's `over_budget` flag | `--danger` |
+
+Red starts at 90% rather than at 100% deliberately: once the remaining budget is
+that small the next expense is likely to break it, and a warning that only
+arrives after the money is gone is too late to act on.
+
 ## Typography
 
 **Inter** (`Inter`, `system-ui`, `sans-serif`). Numbers in tables and budget

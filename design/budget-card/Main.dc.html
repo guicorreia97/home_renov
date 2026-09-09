@@ -94,9 +94,11 @@ class Component extends DCLogic {
         maximumFractionDigits: 2,
       }).format(n);
 
-    // Token semantics from docs/design-system-guide.md: --success is "under
-    // budget", --warning "approaching budget", --danger "over budget".
-    const toneColor = over ? '#C25B4E' : percent >= 80 ? '#D9A441' : '#6BA368';
+    // Thresholds are documented in docs/design-system-guide.md: success under
+    // 80%, warning 80-90%, danger from 90% or once the API reports over budget.
+    // Red starts before the money is gone, while acting still helps.
+    const toneColor =
+      over || percent >= 90 ? '#C25B4E' : percent >= 80 ? '#D9A441' : '#6BA368';
 
     return {
       plannedLabel: money(planned),
