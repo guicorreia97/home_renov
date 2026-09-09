@@ -9,6 +9,15 @@ on:
 
 jobs:
   check:
+    # This name is the required status check on `main`. Branch protection waits
+    # for a check reporting exactly "quality gate" — a check that never reports
+    # stays *pending*, not failed, so every PR blocks on a grey dot that looks
+    # like slow CI. Three edits break it: renaming this `name:`, removing it
+    # (the job key `check` becomes the name instead), and adding a `paths:`
+    # filter above that skips this workflow on some PRs. Change it here and in
+    # protection together:
+    #   gh api repos/{owner}/{repo}/branches/main/protection
+    name: quality gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
