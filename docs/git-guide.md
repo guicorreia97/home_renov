@@ -122,12 +122,20 @@ git switch -c <type>/<slug>    # takes the changes with you
 
 ## Agent-control files
 
-Changes to `AGENTS.md`, `CLAUDE.md`, `ARCHITECTURE-DECISIONS.md`, `.claude/**`,
-`.agents/**`, `.github/**`, `.githooks/**`, `Makefile` and `docs/**` go in their
-**own commit**, never mixed with feature work, and require an explicit request
-(rule 8). They are owned in `.github/CODEOWNERS`, so a PR touching them requests
-a human review automatically. Keeping them in a separate commit means that
-review can be read without a feature diff around it.
+Two different mechanisms apply here; do not confuse them.
+
+**Rule 8 — needs your explicit request.** `AGENTS.md`, `CLAUDE.md`,
+`.claude/**`, `.agents/**`, `.github/**`. Never touched unprompted, and always
+in their **own commit**, never mixed with feature work. This list is defined in
+`AGENTS.md`; if it changes, it changes there first.
+
+**CODEOWNERS — needs a human review on the PR.** A wider set:
+`ARCHITECTURE-DECISIONS.md`, `Makefile`, `.githooks/**` and `docs/**` on top of
+the rule 8 files. These may be edited as part of ordinary work — a guide that
+no longer matches the code is a bug, and fixing it is expected — but
+`.github/CODEOWNERS` requests a human reviewer automatically when a PR touches
+them. Keeping such edits in their own commit makes that review readable without
+a feature diff around it.
 
 ## Branch protection
 

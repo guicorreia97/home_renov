@@ -15,9 +15,11 @@ cleanup. Read it before your first commit on a branch. In short:
   to `origin` needs no permission — it is a backup, not a publication.
 - `make check` must pass before committing. The pre-commit hook enforces this;
   `--no-verify` only defers the failure to CI.
-- Changes to agent-control files (`AGENTS.md`, `.claude/**`, `.agents/**`,
-  `.github/**`, `.githooks/**`, `Makefile`, `docs/**`) go in their **own
-  commit**, never mixed with feature work.
+- Changes to agent-control files (`AGENTS.md`, `CLAUDE.md`, `.claude/**`,
+  `.agents/**`, `.github/**`) need an explicit request and go in their **own
+  commit**, never mixed with feature work — rule 8. `docs/**`, `Makefile`,
+  `.githooks/**` and `ARCHITECTURE-DECISIONS.md` are not rule 8, but are owned
+  in CODEOWNERS: editable as part of the work, reviewed by a human on the PR.
 
 ## Format
 

@@ -3,7 +3,9 @@
 .PHONY: install check lint fmt test secrets secrets-history run hooks branch-status
 
 BACKEND := backend
-CURRENT := $(shell git branch --show-current)
+# Recursive `=`, not `:=` — this shells out only when branch-status uses it,
+# rather than on every make invocation.
+CURRENT = $(shell git branch --show-current)
 
 install:
 	cd $(BACKEND) && uv sync

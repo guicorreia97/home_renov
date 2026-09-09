@@ -48,15 +48,41 @@ case "$SUBJECT" in
 	*.) die "subject ends with a period; drop it." ;;
 esac
 
-# A feature branch implements a proposed change, so its commits must say which.
-BRANCH=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo "")
-case "$BRANCH" in
-feat/*)
-	CHANGE=$(grep -E '^Change: ' "$MSG_FILE" | head -n 1 | sed 's/^Change: *//')
+# The branch name. HEAD is detached while a rebase replays commits, so fall
+# back to the branch being rebased — otherwise every reworded commit skips the
+# trailer check exactly when a trailer is easiest to drop.
+branch_name() {
+	git symbolic-ref --quiet --short HEAD 2>/dev/null && return 0
+	git_dir=$(git rev-parse --git-dir)
+	for f in "$git_dir/rebase-merge/head-name" "$git_dir/rebase-apply/head-name"; do
+		[ -f "$f" ] && sed 's|^refs/heads/||' "$f" && return 0
+	done
+	echo ""
+}
+
+BRANCH=$(branch_name)
+
+# A commit needs a Change: trailer when it implements a proposed change — on a
+# feature branch, or when it touches a requirement, whatever the branch is
+# called. Mirrors the table in docs/git-guide.md; keep the two in step.
+needs_change_trailer() {
+	case "$BRANCH" in
+	feat/*) return 0 ;;
+	esac
+	git diff --cached --name-only 2>/dev/null | grep -q '^openspec/specs/' && return 0
+	return 1
+}
+
+if needs_change_trailer; then
+	# --parse reads only the trailer block, so a body line that happens to start
+	# with "Change:" is not mistaken for the declaration.
+	CHANGE=$(git interpret-trailers --parse "$MSG_FILE" 2>/dev/null |
+		sed -n 's/^Change: *//p' | head -n 1)
 	if [ -z "$CHANGE" ]; then
-		die "branch '$BRANCH' is a feature branch, so the message needs a trailer:
+		die "this commit needs a trailer naming the change it implements:
     Change: <openspec-change-id>
-  Propose the change first if it does not exist yet (openspec-propose)."
+  It must sit in the trailer block at the end of the message, beside
+  Co-Authored-By. Propose the change first if it does not exist (openspec-propose)."
 	fi
 	if [ ! -d "openspec/changes/$CHANGE" ] &&
 		! ls -d "openspec/changes/archive/"*"-$CHANGE" >/dev/null 2>&1; then
@@ -64,7 +90,6 @@ feat/*)
   looked in: openspec/changes/$CHANGE
              openspec/changes/archive/<date>-$CHANGE"
 	fi
-	;;
-esac
+fi
 
 exit 0
