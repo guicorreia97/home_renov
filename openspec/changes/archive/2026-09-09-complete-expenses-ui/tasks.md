@@ -127,7 +127,7 @@ The frontend work is untracked and unreviewed. Judge it before building on it.
 
 - [x] 4.1 End-to-end component test: create → filter → edit → delete, with the
       summary updating at each step
-- [ ] 4.2 Manual pass against a running backend (`make run` + `npm run dev`) on
+- [x] 4.2 Manual pass against a running backend (`make run` + `npm run dev`) on
       an empty JSON store and on a populated one
 - [x] 4.3 Confirm no console errors and no unhandled promise rejections
 - [x] 4.4 Update `README.md` with the `npm test` command
@@ -138,15 +138,29 @@ The frontend work is untracked and unreviewed. Judge it before building on it.
 **Quality Gate:**
 - [x] All tests pass — `make check` and `npm test`
 - [x] `npm run build` clean
-- [ ] Documentation synced
+- [x] Documentation synced
 
 ---
 
 ## Completion Checklist
 
-- [ ] All phases complete
-- [ ] All quality gates passed
-- [ ] Every success criterion in `proposal.md` verified, not assumed
-- [ ] Nothing from the Out of Scope list was built
-- [ ] Documentation synced
-- [ ] Ready for `/openspec-archive`
+- [x] All phases complete
+- [x] All quality gates passed
+- [x] Every success criterion in `proposal.md` verified, not assumed
+- [x] Nothing from the Out of Scope list was built
+- [x] Documentation synced
+- [x] Ready for `/openspec-archive`
+
+---
+
+## Archive note
+
+Archived 2026-09-09 with one artifact incomplete: **`design.md` was never
+written**. The proposal's "Architecture Considerations" covered that ground
+informally and the decision was to archive with the gap recorded rather than
+write a design document after the fact, which would document nothing.
+
+The manual pass (4.2) was signed off by the user on the populated store, and
+raised one change: the spend bar now turns red from 90% rather than only once
+the budget is exceeded. That threshold is recorded in
+`docs/design-system-guide.md`.
