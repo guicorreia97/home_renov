@@ -100,16 +100,24 @@ branch commits is lost the moment it lands. The PR body is what survives.
 | 1. Branch | `git switch -c <type>/<slug>` off an up-to-date `main` | Agent |
 | 2. Propose | For `feat/**`: `openspec-propose` before code | Agent |
 | 3. Commit | `make check` green; hooks enforce format and trailer | Agent |
-| 4. Push | `git push -u origin <branch>` — freely, no permission needed | Agent |
-| 5. Pull request | `gh pr create` | **Human — ask first** |
-| 6. Merge | Squash-merge, CI green | **Human only** |
-| 7. Clean up | Branch auto-deletes; `git fetch --prune` locally | Automatic |
-| 8. Archive | `openspec-archive-change` once merged | Agent |
+| 4. Review | `reviewer` sub-agent over the branch diff; fix what it finds | Agent |
+| 5. Archive | For `feat/**`: `openspec-archive-change` as the **last commit on the branch** | Agent |
+| 6. Push | `git push -u origin <branch>` — freely, no permission needed | Agent |
+| 7. Pull request | `gh pr create` | **Human — ask first** |
+| 8. Merge | Squash-merge, CI green | **Human only** |
+| 9. Clean up | Branch auto-deletes; `git fetch --prune` locally | Automatic |
 
 Pushing a branch is cheap, reversible, and triggers no deploy — it is a backup,
 not a publication, and needs no permission. A pull request is outward-facing:
 it notifies people and asks for a decision. Never open one unprompted, and
 never merge one.
+
+**Archive before the merge, not after.** The archive move is a commit like any
+other, and `main` accepts commits only through a pull request — so archiving
+after the merge would need a second branch and a second PR to move a directory.
+Archiving as the final commit on the branch keeps the change and its record in
+one PR. This is what already happened for `complete-expenses-ui`: `332fb43` is
+the last commit before the merge, not the first after it.
 
 ## Never on main
 

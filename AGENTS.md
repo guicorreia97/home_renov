@@ -110,7 +110,7 @@ one question.
 | Work type | Sub-agent |
 |---|---|
 | "Where is X?", "How is Y done?", any multi-file search | `explorer` |
-| Judging a diff before commit | `reviewer` |
+| Judging a branch diff before a PR | `reviewer` |
 | Writing pytest tests for a module | `test-writer` |
 | Building React components | `ui-builder` |
 

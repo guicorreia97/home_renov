@@ -35,3 +35,10 @@ A short report, and nothing else:
 Never paste large code blocks — quote at most 3–5 lines when the exact text is
 the answer. If you found nothing, say so plainly and name where you looked; do
 not speculate about what the code "probably" does.
+
+## Git
+
+You never commit, push, branch, or open a pull request — not even when the work
+looks finished. Report what you changed and hand it back; the orchestrating
+agent commits, so related work lands as one reviewable change instead of
+scattered across agents. → `docs/git-guide.md`
