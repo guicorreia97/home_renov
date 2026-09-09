@@ -69,8 +69,23 @@ describe('BudgetSummaryStrip', () => {
     expect(fill?.className).toContain('bg-success')
   })
 
-  it('warns before the budget is gone, not only after', () => {
+  it('warns from 80%, while there is still room', () => {
     renderStrip({ summary: aSummary({ budget_used_percent: 85, over_budget: false }) })
+
+    expect(barFill()?.className).toContain('bg-warning')
+  })
+
+  it('turns red from 90%, before the budget is actually gone', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 90, over_budget: false }) })
+
+    const fill = barFill()
+    expect(fill?.className).toContain('bg-danger')
+    expect(fill?.className).not.toContain('bg-warning')
+    expect(amountFor('Remaining budget')?.className).toContain('text-danger')
+  })
+
+  it('stays merely warning just below 90%', () => {
+    renderStrip({ summary: aSummary({ budget_used_percent: 89.9, over_budget: false }) })
 
     expect(barFill()?.className).toContain('bg-warning')
   })

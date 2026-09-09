@@ -81,11 +81,15 @@ function buildRemainingConclusion(summary: BudgetSummary): RemainingConclusion |
     return null
   }
   const percent = summary.budget_used_percent
-  const tone: RemainingConclusionTone = summary.over_budget
-    ? 'danger'
-    : percent !== null && percent >= 80
-      ? 'warning'
-      : 'success'
+  // Red before the money is gone, not after: at 90% the remaining budget is
+  // small enough that the next expense is likely to break it, which is the
+  // point at which the user needs to act.
+  const tone: RemainingConclusionTone =
+    summary.over_budget || (percent !== null && percent >= 90)
+      ? 'danger'
+      : percent !== null && percent >= 80
+        ? 'warning'
+        : 'success'
   return {
     label: summary.over_budget ? 'Over budget by' : 'Remaining budget',
     amount: formatMoney(summary.remaining_budget, summary.currency),
