@@ -1,0 +1,93 @@
+/**
+ * Token definitions and base layer.
+ *
+ * The values below are the normative palette from docs/design-system-guide.md.
+ * They live as CSS custom properties (rather than only inside tailwind.config.js)
+ * so the tokens are inspectable in devtools and reachable from plain CSS. Change
+ * a value in the guide first, then here.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ground and surfaces — warm neutrals, never blue-grey. */
+    --bg: #14110f;
+    --surface: #1e1a17;
+    --surface-raised: #292320;
+    --border: #3a322e;
+
+    /* Text. --text is a warm off-white, deliberately not pure #FFF. */
+    --text: #f2ede8;
+    --text-muted: #a79b92;
+    --text-faint: #6e635c;
+
+    /* One terracotta accent does all the work. It appears once per view as the
+       primary action — three accent buttons on a screen means no primary. */
+    --accent: #d97843;
+    --accent-hover: #e68a55;
+    --accent-soft: #3a241a;
+
+    /* Status only. Never used decoratively. */
+    --success: #6ba368;
+    --warning: #d9a441;
+    --danger: #c25b4e;
+
+    /* Backdrop behind a modal. */
+    --overlay: rgba(20, 17, 15, 0.8);
+
+    /* Status colors blended ~15% over --surface, for badge fills. Tailwind's
+       opacity modifier needs an alpha-capable color format; these are plain
+       hex, so the tint is precomputed instead — same pattern as --accent-soft. */
+    --success-soft: #2a2f23;
+    --warning-soft: #3a2f1d;
+    --danger-soft: #37241f;
+
+    /* Dark is the only theme in v1; this keeps form controls and scrollbars
+       from rendering in the browser's light defaults. */
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: var(--bg);
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Budget figures and table numerals must align column-wise. */
+  .tabular,
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus is always visible. Components may restyle this ring but must never
+     remove it without providing a replacement. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* No transforms on hover and no entrance animations anywhere in this system,
+     so the only motion to suppress is the 150ms color transitions. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -19,6 +19,11 @@ secretGroup = 1
 tags = ["password", "connection-string"]
 
 [rules.allowlist]
+# Match against the whole line, not just the captured secret. The patterns below
+# include the surrounding ":" and "@" for precision, and gitleaks' default
+# regexTarget of "secret" would test them against the password alone — so every
+# one of them would silently never match.
+regexTarget = "line"
 # Placeholders that are obviously not real credentials.
 regexes = [
   '''(?i):(\*{3,}|x{3,}|<[^>]+>|\$\{[^}]+\}|password|pass|changeme|placeholder|your[-_]?password)@''',

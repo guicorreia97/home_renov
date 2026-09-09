@@ -31,10 +31,32 @@ Dark is the only theme in v1. Define these as CSS custom properties on `:root`.
 | `--success` | `#6BA368` | Done, complete, under budget. |
 | `--warning` | `#D9A441` | At risk, approaching budget. |
 | `--danger` | `#C25B4E` | Blocked, over budget, destructive. |
+| `--overlay` | `rgba(20, 17, 15, 0.8)` | Backdrop behind a modal, dimming the screen beneath it. |
+| `--success-soft` | `#2A2F23` | Success badge fill — `--success` blended ~15% over `--surface`. |
+| `--warning-soft` | `#3A2F1D` | Warning badge fill — `--warning` blended ~15% over `--surface`. |
+| `--danger-soft` | `#37241F` | Danger badge fill — `--danger` blended ~15% over `--surface`. |
+
+The soft tokens exist because Tailwind's `/opacity` modifier needs a color defined
+in an alpha-capable format; ours are plain hex custom properties, so a genuine
+15%-opacity fill is precomputed as its own solid token instead — same pattern as
+`--accent-soft`.
 
 Rules: the accent appears **once per view** as the primary action — a screen with
 three terracotta buttons has no primary action. Status colors are reserved for
 status; never use `--success` merely because a thing is positive.
+
+**Budget thresholds.** "Approaching" and "over" are specific numbers, so that
+two screens showing the same spend never disagree about its colour:
+
+| Share of the planned budget forecast | Token |
+|---|---|
+| under 80% | `--success` |
+| 80% to under 90% | `--warning` |
+| 90% and over, or the API's `over_budget` flag | `--danger` |
+
+Red starts at 90% rather than at 100% deliberately: once the remaining budget is
+that small the next expense is likely to break it, and a warning that only
+arrives after the money is gone is too late to act on.
 
 ## Typography
 
@@ -58,6 +80,19 @@ Never go below 13px. Body text is never `--text-faint`.
 - Card padding 24px; card gap 16px; section gap 32px.
 - Radii: 8px inputs and buttons, 12px cards, 999px pills and badges.
 - Max content width 1200px, centered.
+
+## Layout tokens
+
+Structural sizing constants that are not spacing (margin/padding/gap) but still
+need a named value instead of an arbitrary one-off in a component. Defined
+under `theme.extend` in `tailwind.config.js`, alongside the 1200px content
+width above.
+
+| Token | Value | Use |
+|---|---|---|
+| `max-w-modal` | 480px | Modal panel width. |
+| `max-h-modal` | 85vh | Modal panel max height before its body scrolls. |
+| `min-w-field` | 160px | Minimum width for an inline filter/select so it doesn't collapse below a usable size. |
 
 ## Elevation & motion
 

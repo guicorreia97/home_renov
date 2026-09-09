@@ -1,6 +1,7 @@
 # app/core/config.py
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -37,6 +38,17 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     DEBUG: bool = False
     SPECIAL_MESSAGE: str = "Hello."
+    # Root of the local JSON store. Per-environment subdirectories keep
+    # testing data away from development data. Never committed.
+    DATA_DIR: str = "data"
+    # ISO 4217 code. Single-property, single-currency in v1: amounts carry
+    # no currency of their own.
+    CURRENCY: str = "EUR"
+
+    @property
+    def data_path(self) -> Path:
+        """Directory holding this environment's JSON collections."""
+        return Path(self.DATA_DIR) / self.APP_ENV
 
 
 # Instantiate the Settings object, loading environment variables
