@@ -1,6 +1,6 @@
 # The quality gate. `make check` is the single definition of "done" — the
 # pre-commit hook and CI both call it, so there is only ever one gate to trust.
-.PHONY: install check lint fmt test secrets secrets-history run hooks branch branch-status harness-check check-frontend
+.PHONY: install check lint fmt test secrets secrets-history run hooks branch branch-prune branch-status harness-check check-frontend
 
 BACKEND := backend
 FRONTEND := frontend
@@ -155,3 +155,39 @@ branch-status:
 	@ls -1 openspec/changes 2>/dev/null | grep -qv '^archive$$' || echo "  (none)"
 	@stashes=$$(git stash list | wc -l | tr -d ' '); \
 		[ "$$stashes" = "0" ] || { echo; echo "$$stashes stash(es) — see docs/git-guide.md"; git stash list | sed 's/^/  /'; }
+
+# Delete local branches whose upstream is gone.  Dry run by default:
+#   make branch-prune              # list what would go
+#   make branch-prune CONFIRM=1    # actually delete
+#
+# `gone` is the right signal, and a better one than branch-status uses. GitHub
+# deletes the head branch when it squash-merges, so `git fetch --prune` marking
+# a local branch `[gone]` means the remote it tracked was removed — landed, and
+# nothing further will happen to it. Unlike patch-id it cannot fire early, and
+# it still catches a branch absorbed into a *larger* squash, which patch-id
+# misses because the diffs no longer match.
+#
+# Deleting when the PR is opened rather than merged would be the wrong moment:
+# that window is exactly when a PR needs a rebase — branch protection requires
+# the branch be up to date with main — and `-D` would discard anything not yet
+# pushed.
+#
+# Dry run first because `-D` does not ask. `-d` is not the safer option it looks
+# like: it refuses every squash-merged branch, which is all of them here.
+branch-prune:
+	@git fetch --prune --quiet 2>/dev/null || true
+	@gone=$$(git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads \
+		| awk '$$2 == "[gone]" { print $$1 }' | grep -vx main || true); \
+	if [ -z "$$gone" ]; then echo "nothing to prune: no local branch has a deleted upstream."; exit 0; fi; \
+	for b in $$gone; do \
+		if [ "$$b" = "$(CURRENT)" ]; then \
+			echo "  skip    $$b (checked out — 'git switch main' first)"; \
+		elif [ -n "$(CONFIRM)" ]; then \
+			git branch -D "$$b" >/dev/null 2>&1 && echo "  deleted $$b" \
+				|| echo "  FAILED  $$b"; \
+		else \
+			echo "  would delete $$b"; \
+		fi; \
+	done; \
+	[ -n "$(CONFIRM)" ] || { echo; echo "dry run — nothing deleted."; \
+		echo "to apply: make branch-prune CONFIRM=1"; }

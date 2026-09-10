@@ -195,18 +195,34 @@ any file the branch also touched, at which point the trees diverge and a branch
 that landed weeks ago silently reverts to `in progress`. That regression is why
 this is done by patch-id.
 
-`in progress` is the only state with unlanded content. Delete the other two:
+`in progress` is the only state with unlanded content.
+
+## Cleaning up
 
 ```sh
-git branch -D <branch>                    # -D, not -d: a squash-merged branch
-                                          # looks unmerged to -d and is refused
-git push origin --delete <branch>         # remote, if it still exists
-git fetch --prune                         # drop stale tracking refs
+make branch-prune              # list local branches whose upstream is gone
+make branch-prune CONFIRM=1    # delete them
 ```
 
-`-d` refuses a squash-merged branch for the same ancestry reason, so it is not
-the safety net it looks like here. `make branch-status` is what tells you the
-content has landed; `-D` is then safe.
+**Delete on merge, not on open.** The signal is `[gone]`: GitHub deletes the
+head branch when it squash-merges, so after `git fetch --prune` a local branch
+whose upstream has vanished is one that landed and will never change again.
+Deleting when the *pull request is opened* is the wrong moment — that window is
+exactly when a PR needs a rebase, since branch protection requires the branch be
+up to date with `main`, and `-D` would discard anything not yet pushed.
+
+`[gone]` is also stricter than the `branch-status` states above, and catches a
+case they miss: a branch absorbed into a **larger** squash — a stacked PR that
+carried it — has a cumulative diff that no longer matches any single commit, so
+patch-id cannot see it. The deleted upstream does not care whose squash took it.
+
+Dry run is the default because `-D` does not ask. `-d` is not the safer choice
+it appears to be: it refuses every squash-merged branch, which here is all of
+them. If a remote branch somehow survives its merge:
+
+```sh
+git push origin --delete <branch>
+```
 
 ## Stashes
 
