@@ -3,10 +3,13 @@
 Scoped rules for the React + TypeScript client. The root `AGENTS.md` still
 applies; this adds what is only true here. `CLAUDE.md` is a symlink to this file.
 
-**Status: scaffolded and wired to the API, no screens yet.** The Vite app, the
-Tailwind token layer, the typed API client and the backend types all exist and
-are verified against the running service. Build screens on top of them — do not
-re-scaffold, do not add a second HTTP layer, and do not fake API data to move on.
+**Status: the expenses screen ships.** `ExpensesScreen` is wired into `App.tsx`
+behind a health check, built on the Vite app, the Tailwind token layer, the typed
+API client, the backend types and the shared components in `src/components/` —
+all verified against the running service and covered by the Vitest suite. Build
+the next screen on what is already here: do not re-scaffold, do not add a second
+HTTP layer, do not rebuild a component that `src/components/` already provides,
+and do not fake API data to move on.
 
 ## Stack
 
@@ -19,8 +22,8 @@ in `backend/app/api/main.py`), so do not change the port without changing CORS.
 | Path | Purpose |
 |---|---|
 | `src/api/` | Typed API client. `client.ts` is the **only** place `fetch` is called. |
-| `src/components/` | Reusable presentational components. |
-| `src/features/<name>/` | A screen and the pieces only it uses (`budget/`, `expenses/`). |
+| `src/components/` | Reusable presentational components: `Button`, `Badge`, `Modal`, `TextField`, `SelectField`. |
+| `src/features/<name>/` | A screen and the pieces only it uses. `expenses/` is the only one so far. |
 | `src/types/` | Types mirroring the backend Pydantic models. |
 | `src/lib/` | Small helpers. `format.ts` renders money, dates and enum labels. |
 | `tailwind.config.js` | The design tokens as Tailwind classes. Mirrors the guide. |
