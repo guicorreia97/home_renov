@@ -172,14 +172,33 @@ make branch-status
 ```
 
 Lists every local and remote branch with its ahead/behind count against
-`origin/main`, whether it is fully merged, and any open OpenSpec change. A
-branch showing `0 ahead` is fully contained in `main` and safe to delete:
+`origin/main`, whether it is fully merged, and any open OpenSpec change. Two
+states mean the branch is done and safe to delete:
+
+| State | What it means |
+|---|---|
+| `merged — safe to delete` | `0 ahead`: `main` contains the branch's own commits. |
+| `squash-merged — safe to delete` | The branch still has commits of its own, but its **tree is identical** to `main` — its content landed under a new hash. |
+
+The second row is the normal outcome here, because the workflow above squash-
+merges every pull request. A squash writes one new commit with a new hash, so
+the branch keeps its original commits and the ahead-count never returns to
+zero — `chore/git-workflow` read `5 ahead` for as long as it existed after
+landing as PR #2. Ahead-count alone therefore never clears a branch merged the
+way this repo merges; only the tree comparison does.
+
+`in progress` is the only state with unlanded content. Delete the other two:
 
 ```sh
-git branch -d <branch>                    # local; -d refuses if unmerged
+git branch -D <branch>                    # -D, not -d: a squash-merged branch
+                                          # looks unmerged to -d and is refused
 git push origin --delete <branch>         # remote, if it still exists
 git fetch --prune                         # drop stale tracking refs
 ```
+
+`-d` refuses a squash-merged branch for the same ancestry reason, so it is not
+the safety net it looks like here. `make branch-status` is what tells you the
+content has landed; `-D` is then safe.
 
 ## Stashes
 

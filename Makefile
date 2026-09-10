@@ -57,7 +57,19 @@ hooks:
 	@echo "commit format and the Change: trailer. See docs/git-guide.md."
 
 # Audit branch state against origin/main, so cleanup is a read rather than an
-# investigation. A branch with 0 ahead is fully contained in main and can go.
+# investigation.
+#
+# A branch is done in either of two ways, and the second one is the common case
+# here. `0 ahead` means main literally contains its commits — that is what a
+# fast-forward or a merge commit leaves behind. But rule 9 mandates *squash*
+# merges, and a squash writes one new commit with a new hash: the branch keeps
+# every original commit, ancestry is severed, and it reads as "5 ahead" forever.
+# Judging by ahead-count alone, no branch merged by this repo's own workflow
+# would ever be reported deletable — the target would never once do its job.
+#
+# So also compare the trees. `git diff --quiet` exits 0 when the branch's content
+# is identical to main's, which means everything on it has landed however it got
+# there. That test is about content, not history, so the squash cannot hide it.
 branch-status:
 	@git fetch --prune --quiet 2>/dev/null || true
 	@printf '%-38s %8s %8s  %s\n' BRANCH BEHIND AHEAD STATE
@@ -65,7 +77,9 @@ branch-status:
 		| grep -vE '^(origin/HEAD|origin/main|main)$$' | sort | while read -r b; do \
 		counts=$$(git rev-list --left-right --count origin/main..."$$b" 2>/dev/null) || continue; \
 		behind=$$(echo "$$counts" | cut -f1); ahead=$$(echo "$$counts" | cut -f2); \
-		if [ "$$ahead" -eq 0 ]; then state='merged — safe to delete'; else state='in progress'; fi; \
+		if [ "$$ahead" -eq 0 ]; then state='merged — safe to delete'; \
+		elif git diff --quiet origin/main "$$b" 2>/dev/null; then state='squash-merged — safe to delete'; \
+		else state='in progress'; fi; \
 		[ "$$b" = "$(CURRENT)" ] && b="* $$b"; \
 		printf '%-38s %8s %8s  %s\n' "$$b" "$$behind" "$$ahead" "$$state"; \
 	done
