@@ -105,22 +105,42 @@ hooks:
 # Judging by ahead-count alone, no branch merged by this repo's own workflow
 # would ever be reported deletable — the target would never once do its job.
 #
-# So also compare the trees. `git diff --quiet` exits 0 when the branch's content
-# is identical to main's, which means everything on it has landed however it got
-# there. That test is about content, not history, so the squash cannot hide it.
+# So compare content, not history — by patch-id. A squash merge collapses the
+# branch into one commit whose diff *equals the branch's cumulative diff*, so
+# their patch-ids match. Finding that id among main's commits proves the work
+# landed, and names the commit that carried it.
+#
+# Comparing the branch's tree to main's was the obvious shortcut and it is
+# wrong: it only holds while main has not moved. The moment a later merge
+# touches any file the branch also touched, the trees diverge and a branch that
+# landed weeks ago reverts to "in progress". Patch-id does not decay that way.
+#
+# Main's ids are computed once, not per branch, since that loop is the cost.
 branch-status:
 	@git fetch --prune --quiet 2>/dev/null || true
 	@printf '%-38s %8s %8s  %s\n' BRANCH BEHIND AHEAD STATE
-	@git for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
+	@ids=$$(mktemp); \
+	git rev-list --max-count=200 origin/main | while read -r c; do \
+		printf '%s %s\n' \
+			"$$(git show "$$c" | git patch-id --stable | awk '{print $$1}')" "$$c"; \
+	done > "$$ids"; \
+	git for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
 		| grep -vE '^(origin/HEAD|origin/main|main)$$' | sort | while read -r b; do \
 		counts=$$(git rev-list --left-right --count origin/main..."$$b" 2>/dev/null) || continue; \
 		behind=$$(echo "$$counts" | cut -f1); ahead=$$(echo "$$counts" | cut -f2); \
 		if [ "$$ahead" -eq 0 ]; then state='merged — safe to delete'; \
-		elif git diff --quiet origin/main "$$b" 2>/dev/null; then state='squash-merged — safe to delete'; \
-		else state='in progress'; fi; \
+		else \
+			base=$$(git merge-base origin/main "$$b"); \
+			bid=$$(git diff "$$base" "$$b" | git patch-id --stable | awk '{print $$1}'); \
+			hit=$$(grep "^$$bid " "$$ids" 2>/dev/null | head -n 1 | awk '{print $$2}'); \
+			if [ -n "$$hit" ]; then \
+				state="squash-merged as $$(git log --format=%h -1 "$$hit") — safe to delete"; \
+			else state='in progress'; fi; \
+		fi; \
 		[ "$$b" = "$(CURRENT)" ] && b="* $$b"; \
 		printf '%-38s %8s %8s  %s\n' "$$b" "$$behind" "$$ahead" "$$state"; \
-	done
+	done; \
+	rm -f "$$ids"
 	@echo
 	@echo "open OpenSpec changes:"
 	@ls -1 openspec/changes 2>/dev/null | grep -v '^archive$$' | sed 's/^/  /' \

@@ -178,14 +178,22 @@ states mean the branch is done and safe to delete:
 | State | What it means |
 |---|---|
 | `merged — safe to delete` | `0 ahead`: `main` contains the branch's own commits. |
-| `squash-merged — safe to delete` | The branch still has commits of its own, but its **tree is identical** to `main` — its content landed under a new hash. |
+| `squash-merged as <sha> — safe to delete` | The branch keeps its own commits, but its **cumulative diff** matches that of `<sha>` on `main` — the squash commit that carried it. |
 
 The second row is the normal outcome here, because the workflow above squash-
 merges every pull request. A squash writes one new commit with a new hash, so
 the branch keeps its original commits and the ahead-count never returns to
 zero — `chore/git-workflow` read `5 ahead` for as long as it existed after
 landing as PR #2. Ahead-count alone therefore never clears a branch merged the
-way this repo merges; only the tree comparison does.
+way this repo merges.
+
+The match is by **patch-id**, not by comparing trees. A squash commit's diff is
+exactly the branch's cumulative diff, so their patch-ids are equal, and that
+stays true however far `main` moves afterwards. Comparing the branch's tree to
+`main` looks equivalent and is not: it holds only until a later merge touches
+any file the branch also touched, at which point the trees diverge and a branch
+that landed weeks ago silently reverts to `in progress`. That regression is why
+this is done by patch-id.
 
 `in progress` is the only state with unlanded content. Delete the other two:
 
