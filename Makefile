@@ -1,6 +1,6 @@
 # The quality gate. `make check` is the single definition of "done" — the
 # pre-commit hook and CI both call it, so there is only ever one gate to trust.
-.PHONY: install check lint fmt test secrets secrets-history run hooks branch-status
+.PHONY: install check lint fmt test secrets secrets-history run hooks branch-status harness-check
 
 BACKEND := backend
 # Recursive `=`, not `:=` — this shells out only when branch-status uses it,
@@ -10,7 +10,14 @@ CURRENT = $(shell git branch --show-current)
 install:
 	cd $(BACKEND) && uv sync
 
-check: lint secrets test
+check: harness-check lint secrets test
+
+# Some rules are written in more than one place — the commit vocabulary in the
+# hook and in both docs, rule 8's file list in AGENTS.md and in the guide. This
+# fails when the copies disagree, so a doc cannot quietly describe a rule that
+# is no longer enforced. Runs first: it is instant and needs no environment.
+harness-check:
+	@./scripts/harness-check.sh
 
 lint:
 	cd $(BACKEND) && uv run ruff check .

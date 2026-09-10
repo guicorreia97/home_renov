@@ -22,6 +22,7 @@ Keep it short: deep explanations belong in `docs/`, linked from the tables below
 | `frontend/` | React + TypeScript (Vite). Scaffolded; typed API client, no screens yet. |
 | `frontend/src/api/` | The only place `fetch` is called. Money crosses the wire as a **string**. |
 | `docs/` | Normative guides. Read before touching the matching area. |
+| `scripts/` | Repo-wide shell checks called by the Makefile. |
 | `openspec/` | Change proposals and shipped specs. The only planning home. |
 
 ## Core commands
@@ -32,12 +33,13 @@ Run from the repo root. `make check` is the definition of "done".
 |---|---|
 | `make install` | `uv sync` the backend. |
 | `make run` | Start the API on :8000. |
-| `make check` | **The quality gate**: ruff lint + format + secret scan + pytest. |
+| `make check` | **The quality gate**: harness coherence + ruff lint + format + secret scan + pytest. |
 | `make fmt` | Auto-fix formatting and safe lint errors. |
 | `make test` | pytest only. |
 | `make secrets` | Scan the working tree for credentials (gitleaks). |
 | `make secrets-history` | Scan the full git history. Slower; run after imports. |
 | `make branch-status` | Audit branches against `origin/main`; shows what is safe to delete. |
+| `make harness-check` | Fail when a doc and the rule it describes have drifted apart. |
 | `make hooks` | One-time: activate the tracked git hooks. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
 

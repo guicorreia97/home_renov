@@ -212,6 +212,8 @@ system; a second word for something an existing scope covers makes
 
 `harness` covers `AGENTS.md`, `.claude/`, `.agents/` and `.githooks/`. Use
 `openspec` for changes under `openspec/`, and `design` for design sources under
-`design/`. Both the type and the scope list are enforced by
-`.githooks/commit-msg`; extend the lists here and in the hook together, in the
-same commit.
+`design/`. Both the type and the scope list are enforced by `.githooks/commit-msg`, and
+they are written out again in `.agents/skills/commit-messages/SKILL.md`. Three
+copies drift, so `make harness-check` fails when they disagree — extend all
+three in the same commit, and the gate will tell you if you miss one. It checks
+rule 8's file list the same way.
