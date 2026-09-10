@@ -39,7 +39,9 @@ Run from the repo root. `make check` is the definition of "done".
 | `make check-frontend` | The frontend half alone: oxlint + build (type-checks) + Vitest. |
 | `make secrets` | Scan the working tree for credentials (gitleaks). |
 | `make secrets-history` | Scan the full git history. Slower; run after imports. |
+| `make branch NAME=<type>/<slug>` | Fetch, then branch off `origin/main`. **Start every change with this.** |
 | `make branch-status` | Audit branches against `origin/main`; shows what is safe to delete. |
+| `make branch-prune` | Delete local branches whose upstream is gone. Dry run; `CONFIRM=1` applies. |
 | `make harness-check` | Fail when a doc and the rule it describes have drifted apart. |
 | `make hooks` | One-time: activate the tracked git hooks. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
@@ -134,6 +136,12 @@ job needs.
 - **On failure:** read the actual error, fix the cause, re-run the gate. Do not
   loosen a lint rule, delete a failing test, or add `# noqa` to make the gate
   pass. If a rule is genuinely wrong, say so and ask.
+- **Verify before you assert.** State a fact about the repo only after checking
+  it in this session — especially before declaring a rule inapplicable, a
+  constraint unmet, or a deviation necessary. Git refs are the usual trap: `main`
+  is a local cache and is stale by default, so `git fetch` first or read
+  `origin/main`. "I checked and X" and "X is presumably true" must never come out
+  sounding the same.
 - **Observability:** structured logs only; never log user content (rule 4).
 - **Secrets:** never paste a real credential into a tracked file, a commit
   message, or a log line. If you find one already committed, stop and tell the
@@ -160,3 +168,12 @@ Append here when a mistake happens twice. Keep entries one line.
   committed silently.
 - The app will not boot if `config/envs/.env.<APP_ENV>` is missing — it raises
   `FileNotFoundError` at import time, not a clean startup error.
+- Local `main` is stale until fetched, and under squash-merge a landed branch
+  then looks unmerged — an agent believed that and built a workaround it did not
+  need. Start with `make branch NAME=…`; never judge `main` you have not fetched.
+- "Has this branch landed?" is answered by `scripts/branch-landed.sh`, not by
+  ahead-count and not by comparing trees. Both of those look correct the day you
+  write them and rot on the next merge; the test pins that down.
+- A test suite in the gate must survive a loaded machine. The frontend suite's
+  5s default timeout failed under load with nothing broken; `testTimeout` in
+  `frontend/vite.config.ts` is deliberate headroom, not a workaround.

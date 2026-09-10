@@ -97,7 +97,7 @@ branch commits is lost the moment it lands. The PR body is what survives.
 
 | Stage | What happens | Who decides |
 |---|---|---|
-| 1. Branch | `git switch -c <type>/<slug>` off an up-to-date `main` | Agent |
+| 1. Branch | `make branch NAME=<type>/<slug>` — fetches, then branches off `origin/main` | Agent |
 | 2. Propose | For `feat/**`: `openspec-propose` before code | Agent |
 | 3. Commit | `make check` green; hooks enforce format and trailer | Agent |
 | 4. Review | `reviewer` sub-agent over the branch diff; fix what it finds | Agent |
@@ -178,27 +178,51 @@ states mean the branch is done and safe to delete:
 | State | What it means |
 |---|---|
 | `merged — safe to delete` | `0 ahead`: `main` contains the branch's own commits. |
-| `squash-merged — safe to delete` | The branch still has commits of its own, but its **tree is identical** to `main` — its content landed under a new hash. |
+| `squash-merged as <sha> — safe to delete` | The branch keeps its own commits, but its **cumulative diff** matches that of `<sha>` on `main` — the squash commit that carried it. |
 
 The second row is the normal outcome here, because the workflow above squash-
 merges every pull request. A squash writes one new commit with a new hash, so
 the branch keeps its original commits and the ahead-count never returns to
 zero — `chore/git-workflow` read `5 ahead` for as long as it existed after
 landing as PR #2. Ahead-count alone therefore never clears a branch merged the
-way this repo merges; only the tree comparison does.
+way this repo merges.
 
-`in progress` is the only state with unlanded content. Delete the other two:
+The match is by **patch-id**, not by comparing trees. A squash commit's diff is
+exactly the branch's cumulative diff, so their patch-ids are equal, and that
+stays true however far `main` moves afterwards. Comparing the branch's tree to
+`main` looks equivalent and is not: it holds only until a later merge touches
+any file the branch also touched, at which point the trees diverge and a branch
+that landed weeks ago silently reverts to `in progress`. That regression is why
+this is done by patch-id.
+
+`in progress` is the only state with unlanded content.
+
+## Cleaning up
 
 ```sh
-git branch -D <branch>                    # -D, not -d: a squash-merged branch
-                                          # looks unmerged to -d and is refused
-git push origin --delete <branch>         # remote, if it still exists
-git fetch --prune                         # drop stale tracking refs
+make branch-prune              # list local branches whose upstream is gone
+make branch-prune CONFIRM=1    # delete them
 ```
 
-`-d` refuses a squash-merged branch for the same ancestry reason, so it is not
-the safety net it looks like here. `make branch-status` is what tells you the
-content has landed; `-D` is then safe.
+**Delete on merge, not on open.** The signal is `[gone]`: GitHub deletes the
+head branch when it squash-merges, so after `git fetch --prune` a local branch
+whose upstream has vanished is one that landed and will never change again.
+Deleting when the *pull request is opened* is the wrong moment — that window is
+exactly when a PR needs a rebase, since branch protection requires the branch be
+up to date with `main`, and `-D` would discard anything not yet pushed.
+
+`[gone]` is also stricter than the `branch-status` states above, and catches a
+case they miss: a branch absorbed into a **larger** squash — a stacked PR that
+carried it — has a cumulative diff that no longer matches any single commit, so
+patch-id cannot see it. The deleted upstream does not care whose squash took it.
+
+Dry run is the default because `-D` does not ask. `-d` is not the safer choice
+it appears to be: it refuses every squash-merged branch, which here is all of
+them. If a remote branch somehow survives its merge:
+
+```sh
+git push origin --delete <branch>
+```
 
 ## Stashes
 

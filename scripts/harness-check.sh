@@ -80,5 +80,12 @@ grep -q "Status check \`$job\`" "$GUIDE" ||
     required status check. Branch protection matches on this exact string; a
     check that never reports leaves every PR pending, not failed."
 
+# 6. The harness's own logic, not just its prose. `branch-landed.sh` decides
+#    whether a branch can be deleted, and it shipped wrong twice — both times
+#    passing a manual check on the day, because the failure only appears one
+#    merge later. Its test is hermetic and takes about a second, so the gate
+#    runs it rather than trusting that it still works.
+./scripts/test-branch-landed.sh || fail=1
+
 [ "$fail" -eq 0 ] || exit 1
 echo "harness-check: docs, hook and AGENTS.md agree"
