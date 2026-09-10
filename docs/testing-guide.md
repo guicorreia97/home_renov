@@ -1,7 +1,10 @@
 # Testing guide
 
-pytest, run via `make test` (or `make check` for the full gate). Tests run under
-`APP_ENV=testing`, which loads the committed dummy `config/envs/.env.testing`.
+Two suites, **one gate**. The backend is pytest, run via `make test`; the
+frontend is Vitest, run via `npm test` from `frontend/`. `make check` runs both
+and is the only definition of "done" — the pre-commit hook and CI call it and
+nothing else. Backend tests run under `APP_ENV=testing`, which loads the
+committed dummy `config/envs/.env.testing`.
 
 ## Requirements
 
@@ -48,8 +51,17 @@ directory so nothing leaks between tests.
 ## Frontend
 
 Vitest + React Testing Library, run via `npm test` from `frontend/`
-(`npm run test:watch` while working). `make check` is the backend gate and does
-not run these — the two suites are separate, and both must pass.
+(`npm run test:watch` while working). `make check` runs this suite too, through
+its `check-frontend` target — oxlint, `npm run build` (which type-checks via
+`tsc -b`) and Vitest, the frontend's own definition of done. Use `npm test`
+directly for a fast loop while working; the gate is what decides.
+
+`make check-frontend` runs that half alone. It requires `frontend/node_modules`
+and fails with instructions when the directory is absent rather than skipping —
+`make install` installs both halves. The skip was considered and rejected: it
+would engage on a fresh clone, which is precisely when an unverified commit is
+most likely, and a gate that silently does nothing is worse than no gate because
+it is still trusted.
 
 **happy-dom, not jsdom.** Every modal in the app is a native `<dialog>`, and
 jsdom does not implement `HTMLDialogElement.showModal` — under it, every test

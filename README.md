@@ -15,27 +15,37 @@ accounts, no marketplace.
 ## Quick start
 
 ```bash
-make install    # uv sync the backend
+make install    # uv sync the backend and npm ci the frontend
 make run        # start the API on http://localhost:8000
-make check      # the quality gate: harness + lint + format + secret scan + tests
+make check      # the quality gate: backend and frontend, both halves
 make hooks      # one-time: activate the git hooks (pre-commit + commit-msg)
 ```
 
 Interactive API docs at http://localhost:8000/docs once running.
 
-The frontend is a separate npm project; `make check` covers the backend only.
+**There is one gate, not two.** `make check` runs the harness check, backend lint
+and format, the secret scan, pytest, and then the frontend's own gate — oxlint,
+the production build (which type-checks) and Vitest. The pre-commit hook and CI
+both call it, so a change that breaks the frontend fails at the same moment as
+one that breaks the backend. See `docs/testing-guide.md`.
+
+It follows that `make check` needs `frontend/node_modules`. `make install`
+installs both halves; run it once after cloning. If the directory is missing the
+gate stops and says so — it never skips the frontend silently, because a gate
+that quietly does nothing is trusted while checking nothing.
+
+The frontend also has its own commands, for working inside it:
 
 ```bash
 cd frontend
-npm install     # first time only
 npm run dev     # http://localhost:5173 — needs `make run` in another terminal
 npm run build   # production build; also type-checks
 npm run lint    # oxlint, including the jsx-a11y accessibility rules
 npm test        # vitest + React Testing Library (npm run test:watch while working)
 ```
 
-There are two gates, not one: `make check` for the backend, `npm test` for the
-frontend. Both must pass. See `docs/testing-guide.md`.
+Node 22 is pinned in `frontend/.nvmrc`; CI reads that same file, so `nvm use`
+gives you the version the gate runs.
 
 The dev port is pinned to 5173 because the backend's CORS allowlist names that
 origin exactly. Changing it breaks every request with an opaque browser error
