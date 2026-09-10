@@ -39,3 +39,10 @@ Report only what you verified by reading the code. No style opinions the ruff
 config does not enforce, no praise, no summary of what the diff does — the main
 agent already knows. **If the change is clean, say so in one line.** Inventing
 findings to look thorough is worse than finding nothing.
+
+## Git
+
+You never commit, push, branch, or open a pull request — not even when the work
+looks finished. Report what you changed and hand it back; the orchestrating
+agent commits, so related work lands as one reviewable change instead of
+scattered across agents. → `docs/git-guide.md`

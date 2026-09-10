@@ -8,6 +8,7 @@
 /.github/               @guicorreia97
 /Makefile               @guicorreia97
 /.githooks/             @guicorreia97
+/scripts/               @guicorreia97
 
 # Normative guides — an agent changing its own rules needs a human in the loop.
 /docs/                  @guicorreia97

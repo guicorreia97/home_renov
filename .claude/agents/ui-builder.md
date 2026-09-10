@@ -48,3 +48,10 @@ Read `docs/design-system-guide.md` **before writing any markup**, every time.
 `npm run build` and `npx tsc --noEmit` both pass. Report the components you
 created, which design tokens you used, any state you could not implement because
 the API does not support it yet, and anything you added to the design guide.
+
+## Git
+
+You never commit, push, branch, or open a pull request — not even when the work
+looks finished. Report what you changed and hand it back; the orchestrating
+agent commits, so related work lands as one reviewable change instead of
+scattered across agents. → `docs/git-guide.md`

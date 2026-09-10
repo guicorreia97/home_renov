@@ -67,7 +67,7 @@ the point where multi-tenancy stops being speculative.
 ---
 
 ### ADR-006 — No spec-driven-development layer yet
-**Status:** Accepted · **Date:** 2026-09-08
+**Status:** Superseded by ADR-008 · **Date:** 2026-09-08
 
 Skipped per-feature `spec.md`/`plan.md`/`contract.md`. With the backend still a
 skeleton, three synchronized documents per feature would cost more than the code,
@@ -101,3 +101,47 @@ bare AWS access key IDs, and passwords embedded in connection URIs.
 Security already paid for — push protection then adds a server-side backstop
 that a local hook cannot provide, and should run alongside this rather than
 replace it.
+
+---
+
+### ADR-008 — OpenSpec as the change-proposal layer
+**Status:** Accepted · **Date:** 2026-09-09 · **Supersedes:** ADR-006
+
+ADR-006's revisit trigger fired sooner than expected: the expenses slice needed a
+written intent before code, and got one. OpenSpec now owns proposals, tasks and
+shipped requirements — `openspec/changes/<id>/` while in flight,
+`openspec/changes/archive/` plus `openspec/specs/` once shipped.
+
+It avoids what ADR-006 was actually afraid of. The cost there was *three*
+synchronized documents per feature, kept current forever; here a change is
+written once, archived on merge, and only its requirements survive into
+`specs/`. Proposals are required for `feat/**` only, so a typo fix still costs
+nothing.
+
+`docs/plans/` is deleted — two planning homes meant neither was authoritative.
+**Revisit when:** proposals start being written to satisfy the process rather
+than to think, or the archive is consulted more often than `specs/`.
+
+---
+
+### ADR-009 — Trunk-based branches, squash-merged through a PR
+**Status:** Accepted · **Date:** 2026-09-09
+
+`main` is written to only by a squash-merged pull request that CI has passed.
+Considered and rejected: merging locally, which is faster but skips the gate
+outright — `.github/workflows/check.yml` triggers on `pull_request` and on push
+to `main`, so a local merge runs nothing. History already contained one branch
+merged that way and one through a PR.
+
+Squash over merge commits because `git log main` should read as a list of
+shipped changes; the branch's intermediate commits are working notes and stay
+disposable. The cost is that a branch's individual commits are not preserved on
+`main`, which is why the OpenSpec `Change:` trailer is repeated in the PR body —
+squash keeps the PR body, not the branch commits.
+
+Branch protection is not enforced for admins, deliberately: a required check
+that never reports blocks merges *pending*, not failed, and an escape hatch
+beats a repo nobody can merge into.
+**Revisit when:** more than one person commits regularly — required reviews
+currently sit at zero approvals so a solo merge is possible, and that is the
+first setting that should change. → `docs/git-guide.md`

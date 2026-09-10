@@ -40,3 +40,10 @@ Never delete or `xfail` an existing test to get a green run.
 
 The files you created or changed, the count of tests added, the final pytest
 result, and — separately and prominently — any source defect the tests exposed.
+
+## Git
+
+You never commit, push, branch, or open a pull request — not even when the work
+looks finished. Report what you changed and hand it back; the orchestrating
+agent commits, so related work lands as one reviewable change instead of
+scattered across agents. → `docs/git-guide.md`

@@ -17,8 +17,8 @@ accounts, no marketplace.
 ```bash
 make install    # uv sync the backend
 make run        # start the API on http://localhost:8000
-make check      # the quality gate: lint + format + secret scan + tests
-make hooks      # one-time: activate the pre-commit hook
+make check      # the quality gate: harness + lint + format + secret scan + tests
+make hooks      # one-time: activate the git hooks (pre-commit + commit-msg)
 ```
 
 Interactive API docs at http://localhost:8000/docs once running.
@@ -50,3 +50,8 @@ secret scan: `brew install gitleaks`, or grab the binary from its releases page.
 commands, project rules, and which document to read before which task. Start
 there. Architecture choices and their rationale are in
 `ARCHITECTURE-DECISIONS.md`.
+
+Work happens on a branch and reaches `main` only through a squash-merged pull
+request that CI has passed — never a direct commit, never a local merge.
+`make branch-status` shows what is in flight and what is safe to delete.
+`docs/git-guide.md` is the full contract.

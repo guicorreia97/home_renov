@@ -22,7 +22,8 @@ Keep it short: deep explanations belong in `docs/`, linked from the tables below
 | `frontend/` | React + TypeScript (Vite). Scaffolded; typed API client, no screens yet. |
 | `frontend/src/api/` | The only place `fetch` is called. Money crosses the wire as a **string**. |
 | `docs/` | Normative guides. Read before touching the matching area. |
-| `docs/plans/` | Dated proposals. Non-normative. Delete once shipped. |
+| `scripts/` | Repo-wide shell checks called by the Makefile. |
+| `openspec/` | Change proposals and shipped specs. The only planning home. |
 
 ## Core commands
 
@@ -32,12 +33,14 @@ Run from the repo root. `make check` is the definition of "done".
 |---|---|
 | `make install` | `uv sync` the backend. |
 | `make run` | Start the API on :8000. |
-| `make check` | **The quality gate**: ruff lint + format + secret scan + pytest. |
+| `make check` | **The quality gate**: harness coherence + ruff lint + format + secret scan + pytest. |
 | `make fmt` | Auto-fix formatting and safe lint errors. |
 | `make test` | pytest only. |
 | `make secrets` | Scan the working tree for credentials (gitleaks). |
 | `make secrets-history` | Scan the full git history. Slower; run after imports. |
-| `make hooks` | One-time: activate the tracked pre-commit hook. |
+| `make branch-status` | Audit branches against `origin/main`; shows what is safe to delete. |
+| `make harness-check` | Fail when a doc and the rule it describes have drifted apart. |
+| `make hooks` | One-time: activate the tracked git hooks. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
 
 `make check` needs `gitleaks` installed (`brew install gitleaks`, or the binary
@@ -77,6 +80,12 @@ These are invariants. Breaking one is a defect even if tests pass.
 8. **Never modify agent-control files unless explicitly asked** — `AGENTS.md`,
    `CLAUDE.md`, `.claude/**`, `.agents/**`, `.github/**`. If asked, keep the
    change in its own commit.
+9. **Branch, commit and merge by the workflow.** Every change is a branch off
+   `main`, squash-merged through a green pull request — never a direct commit
+   to `main` and never a local merge into it. `feat/**` needs an OpenSpec
+   change proposal first, and its commits carry a `Change:` trailer. Push
+   branches freely; opening or merging a PR is the user's call.
+   → `docs/git-guide.md`
 
 ## Required reading per task
 
@@ -89,6 +98,7 @@ Read the doc before starting; do not infer the convention from surrounding code.
 | Writing or changing tests | `docs/testing-guide.md` |
 | Any UI work, any component, any styling | `docs/design-system-guide.md` |
 | Handling any credential, token, or connection string | `docs/secrets-guide.md` |
+| Branching, committing, merging, or cleaning up branches | `docs/git-guide.md` |
 | Choosing between two viable architectures | `ARCHITECTURE-DECISIONS.md` |
 
 ## Delegation rule
@@ -102,7 +112,7 @@ one question.
 | Work type | Sub-agent |
 |---|---|
 | "Where is X?", "How is Y done?", any multi-file search | `explorer` |
-| Judging a diff before commit | `reviewer` |
+| Judging a branch diff before a PR | `reviewer` |
 | Writing pytest tests for a module | `test-writer` |
 | Building React components | `ui-builder` |
 
@@ -122,9 +132,10 @@ job needs.
 - **Secrets:** never paste a real credential into a tracked file, a commit
   message, or a log line. If you find one already committed, stop and tell the
   user it must be rotated — removing it from the working tree does not unleak it.
-- **Git:** work on a branch. Conventional Commits (`feat:`, `fix:`, `chore:`,
-  `docs:`, `test:`, `refactor:`). **Never push and never open a PR** unless
-  explicitly asked. → `.agents/skills/commit-messages/SKILL.md`
+- **Git:** branch off `main`, Conventional Commits, squash-merge via PR.
+  Pushing a branch needs no permission; **never open a PR and never merge**
+  unless explicitly asked. → `docs/git-guide.md`,
+  `.agents/skills/commit-messages/SKILL.md`
 - **Human review required before:** changing the storage layer or its on-disk
   format, adding a dependency, changing anything under rule 8, and any first
   deploy-facing config.
