@@ -60,6 +60,15 @@ paths = [
   # Lockfile: hashes and URLs, no credentials, and very noisy to scan.
   '''backend/uv\.lock$''',
 
+  # Generated bundle. `make check` builds it, and gitleaks' `dir` mode does not
+  # honour .gitignore — verified: a key planted in frontend/dist/ is reported.
+  # Without this, every gate run rescans frontend/src through its bundled copy
+  # and adds vendored dependency code, whose example keys are false positives;
+  # a gate that cries wolf is a gate people bypass. This hides nothing: dist is
+  # generated from frontend/src, which is still scanned, and it is gitignored,
+  # so no credential can reach git through it.
+  '''^frontend/dist/''',
+
   # This file: its own regexes look like the things they match.
   '''\.gitleaks\.toml$''',
 ]
