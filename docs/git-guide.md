@@ -97,7 +97,7 @@ branch commits is lost the moment it lands. The PR body is what survives.
 
 | Stage | What happens | Who decides |
 |---|---|---|
-| 1. Branch | `git switch -c <type>/<slug>` off an up-to-date `main` | Agent |
+| 1. Branch | `make branch NAME=<type>/<slug>` — fetches, then branches off `origin/main` | Agent |
 | 2. Propose | For `feat/**`: `openspec-propose` before code | Agent |
 | 3. Commit | `make check` green; hooks enforce format and trailer | Agent |
 | 4. Review | `reviewer` sub-agent over the branch diff; fix what it finds | Agent |

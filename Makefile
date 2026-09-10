@@ -1,6 +1,6 @@
 # The quality gate. `make check` is the single definition of "done" — the
 # pre-commit hook and CI both call it, so there is only ever one gate to trust.
-.PHONY: install check lint fmt test secrets secrets-history run hooks branch-status harness-check check-frontend
+.PHONY: install check lint fmt test secrets secrets-history run hooks branch branch-status harness-check check-frontend
 
 BACKEND := backend
 FRONTEND := frontend
@@ -88,6 +88,28 @@ secrets-history:
 run:
 	cd $(BACKEND) && uv run start
 
+# Start a branch from an *up-to-date* main:  make branch NAME=fix/some-slug
+#
+# The fetch is the point. Local `main` goes stale silently, and every question
+# you ask of it — `git log main..`, `git show main:<file>`, "is this merged?" —
+# then returns a confident wrong answer. A squash merge makes this worse: the
+# work is on origin/main under a new hash, so a stale local main looks like a
+# branch that never landed. An agent reading that concluded the workflow was
+# unmerged and built a needless workaround on top of the wrong base.
+#
+# Rule 9 says "branch off main". This is that, with the step nobody remembers.
+branch:
+	@[ -n "$(NAME)" ] || { \
+		echo "usage: make branch NAME=<type>/<slug>"; \
+		echo "  types: feat fix refactor test docs chore perf"; \
+		exit 1; \
+	}
+	git fetch origin main --prune
+	git switch -c $(NAME) origin/main
+	@echo
+	@echo "branched from origin/main at $$(git rev-parse --short origin/main)."
+	@echo "never judge main from a local ref you have not just fetched."
+
 # One-time: point git at the repo's tracked hooks.
 hooks:
 	git config core.hooksPath .githooks
@@ -105,42 +127,27 @@ hooks:
 # Judging by ahead-count alone, no branch merged by this repo's own workflow
 # would ever be reported deletable — the target would never once do its job.
 #
-# So compare content, not history — by patch-id. A squash merge collapses the
-# branch into one commit whose diff *equals the branch's cumulative diff*, so
-# their patch-ids match. Finding that id among main's commits proves the work
-# landed, and names the commit that carried it.
-#
-# Comparing the branch's tree to main's was the obvious shortcut and it is
-# wrong: it only holds while main has not moved. The moment a later merge
-# touches any file the branch also touched, the trees diverge and a branch that
-# landed weeks ago reverts to "in progress". Patch-id does not decay that way.
-#
-# Main's ids are computed once, not per branch, since that loop is the cost.
+# So compare content, not history. That decision and its two failed predecessors
+# are documented in scripts/branch-landed.sh, which owns the logic and is covered
+# by scripts/test-branch-landed.sh in the gate — this target only formats what it
+# reports.
 branch-status:
 	@git fetch --prune --quiet 2>/dev/null || true
 	@printf '%-38s %8s %8s  %s\n' BRANCH BEHIND AHEAD STATE
-	@ids=$$(mktemp); \
-	git rev-list --max-count=200 origin/main | while read -r c; do \
-		printf '%s %s\n' \
-			"$$(git show "$$c" | git patch-id --stable | awk '{print $$1}')" "$$c"; \
-	done > "$$ids"; \
-	git for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
+	@git for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
 		| grep -vE '^(origin/HEAD|origin/main|main)$$' | sort | while read -r b; do \
 		counts=$$(git rev-list --left-right --count origin/main..."$$b" 2>/dev/null) || continue; \
 		behind=$$(echo "$$counts" | cut -f1); ahead=$$(echo "$$counts" | cut -f2); \
 		if [ "$$ahead" -eq 0 ]; then state='merged — safe to delete'; \
 		else \
-			base=$$(git merge-base origin/main "$$b"); \
-			bid=$$(git diff "$$base" "$$b" | git patch-id --stable | awk '{print $$1}'); \
-			hit=$$(grep "^$$bid " "$$ids" 2>/dev/null | head -n 1 | awk '{print $$2}'); \
+			hit=$$(./scripts/branch-landed.sh "$$b" origin/main 2>/dev/null || true); \
 			if [ -n "$$hit" ]; then \
 				state="squash-merged as $$(git log --format=%h -1 "$$hit") — safe to delete"; \
 			else state='in progress'; fi; \
 		fi; \
 		[ "$$b" = "$(CURRENT)" ] && b="* $$b"; \
 		printf '%-38s %8s %8s  %s\n' "$$b" "$$behind" "$$ahead" "$$state"; \
-	done; \
-	rm -f "$$ids"
+	done
 	@echo
 	@echo "open OpenSpec changes:"
 	@ls -1 openspec/changes 2>/dev/null | grep -v '^archive$$' | sed 's/^/  /' \
