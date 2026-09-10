@@ -2,5 +2,6 @@
 # Runs the same gate as CI. Bypass with --no-verify only when you know why;
 # CI will still run it, so a bypass only defers the failure.
 set -e
-echo "pre-commit: running 'make check' (lint, secrets, tests)..."
+echo "pre-commit: running 'make check' (backend lint, secrets, tests; frontend"
+echo "  lint, build, tests). Needs frontend/node_modules — 'make install'."
 make check
