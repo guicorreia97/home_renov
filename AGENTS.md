@@ -31,11 +31,12 @@ Run from the repo root. `make check` is the definition of "done".
 
 | Command | What it does |
 |---|---|
-| `make install` | `uv sync` the backend. |
+| `make install` | `uv sync` the backend and `npm ci` the frontend. Run once after cloning. |
 | `make run` | Start the API on :8000. |
-| `make check` | **The quality gate**: harness coherence + ruff lint + format + secret scan + pytest. |
+| `make check` | **The quality gate**: harness coherence + ruff lint + format + secret scan + pytest + the frontend gate. |
 | `make fmt` | Auto-fix formatting and safe lint errors. |
 | `make test` | pytest only. |
+| `make check-frontend` | The frontend half alone: oxlint + build (type-checks) + Vitest. |
 | `make secrets` | Scan the working tree for credentials (gitleaks). |
 | `make secrets-history` | Scan the full git history. Slower; run after imports. |
 | `make branch-status` | Audit branches against `origin/main`; shows what is safe to delete. |
@@ -43,9 +44,14 @@ Run from the repo root. `make check` is the definition of "done".
 | `make hooks` | One-time: activate the tracked git hooks. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
 
-`make check` needs `gitleaks` installed (`brew install gitleaks`, or the binary
-from its releases page). It fails loudly if missing rather than skipping the
-scan — a gate that silently does nothing is worse than no gate.
+`make check` covers **both** halves of the repo — a change that breaks the
+frontend fails the gate exactly as a broken backend does. There is one gate, not
+two, because the hook and CI both call this one target.
+
+It therefore needs `gitleaks` installed (`brew install gitleaks`, or the binary
+from its releases page) and `frontend/node_modules` present (`make install`).
+Either one missing fails loudly rather than skipping the step it enables — a
+gate that silently does nothing is worse than no gate, because it is trusted.
 
 Never invoke `pip`, `poetry`, or a bare `python`. Dependencies are managed by
 `uv` only: `cd backend && uv add <pkg>` (or `uv add --dev <pkg>`).

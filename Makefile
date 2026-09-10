@@ -1,16 +1,27 @@
 # The quality gate. `make check` is the single definition of "done" — the
 # pre-commit hook and CI both call it, so there is only ever one gate to trust.
-.PHONY: install check lint fmt test secrets secrets-history run hooks branch-status harness-check
+.PHONY: install check lint fmt test secrets secrets-history run hooks branch-status harness-check check-frontend
 
 BACKEND := backend
+FRONTEND := frontend
 # Recursive `=`, not `:=` — this shells out only when branch-status uses it,
 # rather than on every make invocation.
 CURRENT = $(shell git branch --show-current)
 
+# Installs both halves, because `check` now gates both. `npm ci` rather than
+# `npm install`: it installs exactly the committed lockfile and fails when
+# package.json and package-lock.json disagree, which is the same reproducibility
+# `uv sync` gives the backend. CI calls this target too, so there is one install
+# path, not a local one and a CI one.
 install:
 	cd $(BACKEND) && uv sync
+	cd $(FRONTEND) && npm ci
 
-check: harness-check lint secrets test
+# `check-frontend` runs last: it is the slowest half (~13s against ~3s), so the
+# cheap backend failures surface first. It also builds frontend/dist, and
+# gitleaks' `dir` mode does not honour .gitignore — keeping it after `secrets`
+# means the scan surface never depends on whether a build has run.
+check: harness-check lint secrets test check-frontend
 
 # Some rules are written in more than one place — the commit vocabulary in the
 # hook and in both docs, rule 8's file list in AGENTS.md and in the guide. This
@@ -29,6 +40,33 @@ fmt:
 
 test:
 	cd $(BACKEND) && uv run pytest -q
+
+# The frontend half of the gate: oxlint, the production build (which type-checks
+# via `tsc -b`) and the Vitest suite — the frontend's own definition of done, as
+# stated in frontend/AGENTS.md. Most of the repo's tests live here, so a `check`
+# without them gates the minority of the suite.
+#
+# Missing dependencies fail loudly instead of skipping. A conditional skip was
+# the obvious way to spare a contributor who has never run `npm install`, but it
+# would arm itself on a fresh clone — the exact state where an unverified commit
+# is most likely — and `secrets` below already states the principle: a gate that
+# silently does nothing is worse than no gate, because it is trusted. So the
+# gate stays mandatory and the error names its own fix.
+check-frontend:
+	@command -v npm >/dev/null 2>&1 || { \
+		echo "ERROR: npm not installed — the frontend gate cannot run."; \
+		echo "  install Node (the pinned version is in $(FRONTEND)/.nvmrc), then:"; \
+		echo "    make install"; \
+		exit 1; \
+	}
+	@[ -d $(FRONTEND)/node_modules ] || { \
+		echo "ERROR: $(FRONTEND)/node_modules is missing — the frontend gate cannot run."; \
+		echo "  fix: make install   (runs 'uv sync' and 'npm ci')"; \
+		exit 1; \
+	}
+	cd $(FRONTEND) && npm run lint
+	cd $(FRONTEND) && npm run build
+	cd $(FRONTEND) && npm test
 
 # Secret scanning. Fails loudly when gitleaks is missing rather than skipping:
 # a gate that silently does nothing is worse than no gate, because it is

@@ -35,14 +35,20 @@ Run from `frontend/`.
 
 | Command | What it does |
 |---|---|
-| `npm install` | Install dependencies. |
+| `npm install` | Install dependencies. `make install` from the root does this too, via `npm ci`. |
 | `npm run dev` | Dev server on :5173. Backend must run separately (`make run`). |
 | `npm run build` | Production build — this also type-checks. |
 | `npx tsc --noEmit` | Type-check only. |
 | `npm run lint` | oxlint — includes the `jsx-a11y` accessibility rules (rule 6). |
+| `npm test` | Vitest + React Testing Library. |
 
-**Done means `npm run build` and `npx tsc --noEmit` both pass.** The root
-`make check` covers the backend only; it says nothing about this folder.
+**Done means the root `make check` passes.** It gates this folder as well as the
+backend: its `check-frontend` target runs `npm run lint`, `npm run build` and
+`npm test` from here, and the pre-commit hook and CI both call it. The commands
+above are the fast inner loop; the gate is what decides. `make check-frontend`
+runs this half alone.
+
+Node 22, pinned in `.nvmrc` — CI reads that same file.
 
 ## Rules
 

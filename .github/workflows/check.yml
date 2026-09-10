@@ -42,6 +42,24 @@ jobs:
         with:
           enable-cache: true
 
+      # `make check` now runs the frontend suite too, so the runner needs Node.
+      # The version is read from frontend/.nvmrc rather than written here: the
+      # workflow and a local `nvm use` then agree by construction, and a bump is
+      # one edit. Pinned to 22 — the version the frontend is developed against
+      # locally (v22.15.0) and the active LTS line, so the gate is not silently
+      # revalidated against a new major the day it ships.
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          # The npm counterpart of setup-uv's enable-cache above: restores
+          # ~/.npm keyed on the committed lockfile, so `npm ci` resolves from
+          # cache instead of re-downloading the tree on every run.
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Installs both halves — `make install` runs `uv sync` and `npm ci`, so CI
+      # and a local clone follow the identical setup path.
       - name: Install dependencies
         run: make install
 
