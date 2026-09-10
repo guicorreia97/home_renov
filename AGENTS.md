@@ -41,6 +41,7 @@ Run from the repo root. `make check` is the definition of "done".
 | `make secrets-history` | Scan the full git history. Slower; run after imports. |
 | `make branch NAME=<type>/<slug>` | Fetch, then branch off `origin/main`. **Start every change with this.** |
 | `make branch-status` | Audit branches against `origin/main`; shows what is safe to delete. |
+| `make branch-prune` | Delete local branches whose upstream is gone. Dry run; `CONFIRM=1` applies. |
 | `make harness-check` | Fail when a doc and the rule it describes have drifted apart. |
 | `make hooks` | One-time: activate the tracked git hooks. |
 | `cd backend && uv run ruff check path/to/file.py` | Check one changed file. |
