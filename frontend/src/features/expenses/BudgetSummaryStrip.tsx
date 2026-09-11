@@ -1,5 +1,6 @@
 import { Button } from '../../components/Button'
-import { formatMoney } from '../../lib/format'
+import { useFormat, useTranslation, type MessageKey, type TranslateFn } from '../../i18n'
+import type { FailureKind } from '../../lib/apiFailure'
 import type { BudgetSummary, Money, SignedMoney } from '../../types'
 import type { RemainingConclusion, RemainingConclusionTone } from './RemainingBudgetConclusion'
 import { RemainingConclusionBlock } from './RemainingBudgetConclusion'
@@ -7,10 +8,10 @@ import { RemainingConclusionBlock } from './RemainingBudgetConclusion'
 export interface BudgetSummaryStripProps {
   summary: BudgetSummary | null
   summaryLoading: boolean
-  summaryError: string | null
+  summaryError: FailureKind | null
   /** True while the budget targets themselves are still loading. */
   budgetLoading: boolean
-  budgetError: string | null
+  budgetError: FailureKind | null
   onEditBudget: () => void
 }
 
@@ -20,14 +21,24 @@ interface Figure {
   tone?: 'success' | 'warning' | 'danger'
 }
 
+type FormatMoneyFn = (amount: Money | SignedMoney, currency: string) => string
+
 const toneClass: Record<NonNullable<Figure['tone']>, string> = {
   success: 'text-success',
   warning: 'text-warning',
   danger: 'text-danger',
 }
 
+function errorMessageKey(kind: FailureKind): MessageKey {
+  return kind === 'network' ? 'budget.error.network' : 'budget.error.server'
+}
+
 /** Renders a Money/SignedMoney amount, or an em dash in --text-faint when unset. */
-function amountOrDash(value: Money | SignedMoney | null, currency: string): string {
+function amountOrDash(
+  value: Money | SignedMoney | null,
+  currency: string,
+  formatMoney: FormatMoneyFn,
+): string {
   return value === null ? '—' : formatMoney(value, currency)
 }
 
@@ -54,29 +65,48 @@ function FigureRow({ figures }: { figures: Figure[] }) {
   )
 }
 
-function buildTargetFigures(summary: BudgetSummary): Figure[] {
+function buildTargetFigures(summary: BudgetSummary, formatMoney: FormatMoneyFn, t: TranslateFn): Figure[] {
   return [
-    { label: 'Planned budget', value: amountOrDash(summary.planned_budget, summary.currency) },
-    { label: 'Purchase price', value: amountOrDash(summary.purchase_price, summary.currency) },
     {
-      label: 'Target sale price',
-      value: amountOrDash(summary.target_sale_price, summary.currency),
+      label: t('budget.field.plannedBudget'),
+      value: amountOrDash(summary.planned_budget, summary.currency, formatMoney),
     },
-    { label: 'Projected profit', value: amountOrDash(summary.projected_profit, summary.currency) },
+    {
+      label: t('budget.field.purchasePrice'),
+      value: amountOrDash(summary.purchase_price, summary.currency, formatMoney),
+    },
+    {
+      label: t('budget.field.targetSalePrice'),
+      value: amountOrDash(summary.target_sale_price, summary.currency, formatMoney),
+    },
+    {
+      label: t('budget.summary.projectedProfit'),
+      value: amountOrDash(summary.projected_profit, summary.currency, formatMoney),
+    },
   ]
 }
 
-function buildSpendFigures(summary: BudgetSummary): Figure[] {
+function buildSpendFigures(summary: BudgetSummary, formatMoney: FormatMoneyFn, t: TranslateFn): Figure[] {
   return [
-    { label: 'Expenses recorded', value: String(summary.expense_count) },
-    { label: 'Total paid', value: formatMoney(summary.total_paid, summary.currency) },
-    { label: 'Total committed', value: formatMoney(summary.total_committed, summary.currency) },
-    { label: 'Total forecast', value: formatMoney(summary.total_forecast, summary.currency) },
+    { label: t('budget.summary.expensesRecorded'), value: String(summary.expense_count) },
+    { label: t('budget.summary.totalPaid'), value: formatMoney(summary.total_paid, summary.currency) },
+    {
+      label: t('budget.summary.totalCommitted'),
+      value: formatMoney(summary.total_committed, summary.currency),
+    },
+    {
+      label: t('budget.summary.totalForecast'),
+      value: formatMoney(summary.total_forecast, summary.currency),
+    },
   ]
 }
 
 /** Builds the closing "remaining budget" figure, or null when there is no budget to close against. */
-function buildRemainingConclusion(summary: BudgetSummary): RemainingConclusion | null {
+function buildRemainingConclusion(
+  summary: BudgetSummary,
+  formatMoney: FormatMoneyFn,
+  t: TranslateFn,
+): RemainingConclusion | null {
   if (summary.planned_budget === null || summary.remaining_budget === null) {
     return null
   }
@@ -91,7 +121,7 @@ function buildRemainingConclusion(summary: BudgetSummary): RemainingConclusion |
         ? 'warning'
         : 'success'
   return {
-    label: summary.over_budget ? 'Over budget by' : 'Remaining budget',
+    label: t(summary.over_budget ? 'budget.summary.overBudget' : 'budget.summary.remaining'),
     amount: formatMoney(summary.remaining_budget, summary.currency),
     percent,
     tone,
@@ -107,44 +137,52 @@ export function BudgetSummaryStrip({
   budgetError,
   onEditBudget,
 }: BudgetSummaryStripProps) {
+  const { t } = useTranslation()
+  const { formatMoney } = useFormat()
   const editDisabled = budgetLoading || !!budgetError
-  const remaining = summary ? buildRemainingConclusion(summary) : null
+  const remaining = summary ? buildRemainingConclusion(summary, formatMoney, t) : null
 
   return (
-    <section className="rounded-card border border-border bg-surface p-6" aria-label="Budget summary">
+    <section
+      className="rounded-card border border-border bg-surface p-6"
+      aria-label={t('budget.summary.label')}
+    >
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-section text-text">Budget</h2>
+        <h2 className="text-section text-text">{t('budget.summary.title')}</h2>
         <div className="text-right">
           <Button variant="ghost" onClick={onEditBudget} disabled={editDisabled}>
-            Edit budget
+            {t('budget.summary.edit')}
           </Button>
-          {budgetLoading && <p className="mt-1 text-label text-muted">Loading budget…</p>}
-          {budgetError && <p className="mt-1 text-label text-danger">{budgetError}</p>}
+          {budgetLoading && (
+            <p className="mt-1 text-label text-muted">{t('budget.summary.loadingTargets')}</p>
+          )}
+          {budgetError && <p className="mt-1 text-label text-danger">{t(errorMessageKey(budgetError))}</p>}
         </div>
       </div>
 
       <div className="mt-4">
-        {summaryLoading && !summary && <p className="text-body text-muted">Loading summary…</p>}
-        {summaryError && <p className="text-body text-danger">{summaryError}</p>}
+        {summaryLoading && !summary && (
+          <p className="text-body text-muted">{t('budget.summary.loadingSummary')}</p>
+        )}
+        {summaryError && <p className="text-body text-danger">{t(errorMessageKey(summaryError))}</p>}
         {summary && (
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-table-head text-muted uppercase">Targets</p>
+              <p className="text-table-head text-muted uppercase">{t('budget.summary.targetsHeading')}</p>
               <div className="mt-2">
-                <FigureRow figures={buildTargetFigures(summary)} />
+                <FigureRow figures={buildTargetFigures(summary, formatMoney, t)} />
               </div>
               {summary.planned_budget === null && (
                 <p className="mt-4 text-body text-muted">
-                  No budget is set yet. Use "Edit budget" above to set a planned budget and track
-                  spend against it.
+                  {t('budget.summary.emptyState', { action: t('budget.summary.edit') })}
                 </p>
               )}
             </div>
 
             <div className="border-t border-border pt-4">
-              <p className="text-table-head text-muted uppercase">Spend</p>
+              <p className="text-table-head text-muted uppercase">{t('budget.summary.spendHeading')}</p>
               <div className="mt-2">
-                <FigureRow figures={buildSpendFigures(summary)} />
+                <FigureRow figures={buildSpendFigures(summary, formatMoney, t)} />
               </div>
             </div>
 

@@ -94,6 +94,24 @@ width above.
 | `max-h-modal` | 85vh | Modal panel max height before its body scrolls. |
 | `min-w-field` | 160px | Minimum width for an inline filter/select so it doesn't collapse below a usable size. |
 
+## Text expansion
+
+The UI ships in English and European Portuguese (`pt-PT`), and Portuguese runs
+**20–30% longer** than English for the same message. Two limits above do not
+move to make room: the modal is fixed at **480px** (`max-w-modal`) and type
+never goes **below 13px**. A longer string is absorbed by layout, never by
+shrinking:
+
+- Labels, helper text and messages wrap onto another line. They are not
+  truncated, ellipsised, or set in a smaller one-off size.
+- Fields placed side by side in a modal must fit the longest label in either
+  language, or stack.
+- A label that would crowd a figure moves onto its own line above it; figures
+  stay tabular and aligned.
+- No new token is added to make a string fit.
+
+Check a screen in `pt-PT` before calling it done — English is the short case.
+
 ## Elevation & motion
 
 Dark UIs separate layers with **surface lightness, not shadow**. Use `--surface`

@@ -1,6 +1,6 @@
 import { Badge, type BadgeTone } from '../../components/Badge'
 import { Button } from '../../components/Button'
-import { formatDate, formatEnumLabel, formatMoney } from '../../lib/format'
+import { useFormat, useTranslation } from '../../i18n'
 import type { Expense, ExpenseStatus } from '../../types'
 
 export interface ExpenseRowProps {
@@ -18,32 +18,39 @@ const statusTone: Record<ExpenseStatus, BadgeTone> = {
 
 /** One row of the expense table. */
 export function ExpenseRow({ expense, currency, onEdit, onDelete }: ExpenseRowProps) {
+  const { t } = useTranslation()
+  const { formatDate, formatMoney } = useFormat()
+
   return (
     <tr className="border-b border-border">
       <td className="py-3 pr-4 text-body text-text">
         {expense.description}
         {expense.room && <span className="ml-2 text-label text-muted">{expense.room}</span>}
       </td>
-      <td className="py-3 pr-4 text-body text-muted">{formatEnumLabel(expense.category)}</td>
+      <td className="py-3 pr-4 text-body text-muted">{t(`expense.category.${expense.category}`)}</td>
       <td className="py-3 pr-4 text-body text-muted">{expense.payee}</td>
       <td className="py-3 pr-4 text-body text-muted">{formatDate(expense.incurred_on)}</td>
       <td className="py-3 pr-4">
-        <Badge tone={statusTone[expense.status]}>{formatEnumLabel(expense.status)}</Badge>
+        <Badge tone={statusTone[expense.status]}>{t(`expense.status.${expense.status}`)}</Badge>
       </td>
       <td className="py-3 pr-4 text-right text-body tabular text-text">
         {formatMoney(expense.amount, currency)}
       </td>
       <td className="py-3 text-right">
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onEdit(expense)} aria-label={`Edit ${expense.description}`}>
-            Edit
+          <Button
+            variant="ghost"
+            onClick={() => onEdit(expense)}
+            aria-label={t('expense.action.editNamed', { description: expense.description })}
+          >
+            {t('expense.action.edit')}
           </Button>
           <Button
             variant="ghost"
             onClick={() => onDelete(expense)}
-            aria-label={`Delete ${expense.description}`}
+            aria-label={t('expense.action.deleteNamed', { description: expense.description })}
           >
-            Delete
+            {t('expense.action.delete')}
           </Button>
         </div>
       </td>
