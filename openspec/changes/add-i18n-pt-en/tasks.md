@@ -152,6 +152,6 @@ leave `pt` values as a placeholder for group 6.
 - [x] 10.2 Spawn the `reviewer` sub-agent on the branch diff, paying particular
       attention to test assertions that got vaguer during 7.2; verify its
       findings are addressed or explicitly dismissed with a reason
-- [ ] 10.3 Push `feat/i18n-pt-en` with `Change: add-i18n-pt-en` trailers on its
+- [x] 10.3 Push `feat/i18n-pt-en` with `Change: add-i18n-pt-en` trailers on its
       commits; verify the branch is on `origin` and leave opening the PR to the
       user
