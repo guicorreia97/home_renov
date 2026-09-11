@@ -87,5 +87,27 @@ grep -q "Status check \`$job\`" "$GUIDE" ||
 #    runs it rather than trusting that it still works.
 ./scripts/test-branch-landed.sh || fail=1
 
+# 7. The frontend layout table lists every directory under frontend/src/, and
+#    nothing that is gone. Agents read the table instead of walking the tree, so
+#    a module it omits does not exist for them — src/i18n/ shipped that way and
+#    stayed invisible until someone noticed by hand.
+FRONT=frontend/AGENTS.md
+rows=$(awk '/^## Layout/ { on = 1; next } on && /^## / { exit } on' "$FRONT" |
+	sed -n 's/^| `\([^`]*\)`.*/\1/p')
+[ -n "$rows" ] || bad "no rows found under '## Layout' in $FRONT. This check
+    reads the first column of that table; renaming the heading or dropping the
+    backticks leaves it with nothing to compare."
+for d in frontend/src/*/; do
+	[ -d "$d" ] || continue
+	d=${d%/}
+	d=${d##*/}
+	printf '%s\n' "$rows" | grep -q "^src/$d/" ||
+		bad "frontend/src/$d/ exists but the Layout table in $FRONT does not list it"
+done
+for p in $rows; do
+	[ -e "frontend/${p%%<*}" ] ||
+		bad "the Layout table in $FRONT lists $p, which does not exist"
+done
+
 [ "$fail" -eq 0 ] || exit 1
 echo "harness-check: docs, hook and AGENTS.md agree"

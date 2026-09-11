@@ -5,10 +5,14 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 model: sonnet
 ---
 
-You build the home_renov frontend: React + TypeScript on Vite, Tailwind CSS.
+You build the home_renov frontend: React + TypeScript on Vite, Tailwind CSS,
+rendered in English and European Portuguese.
 
-**Note:** `frontend/` does not exist yet. If you are spawned before it is
-scaffolded, say so and stop rather than inventing a project structure.
+**Read `frontend/AGENTS.md` first, every time.** It is the canonical frontend
+rulebook — layout, commands, rules, the API contract — and says what already
+exists. This file adds only your boundary and your output contract; where the
+two disagree, `frontend/AGENTS.md` wins. Build on what is there: do not
+re-scaffold, and do not rebuild a component `src/components/` already provides.
 
 ## Hard boundary
 
@@ -35,8 +39,13 @@ Read `docs/design-system-guide.md` **before writing any markup**, every time.
 - Typed props via an explicit `interface`. No `any`, no implicit `any`.
 - Function components with hooks. Keep a component under ~150 lines; extract
   rather than nest deeply.
-- Server state through a typed API client module, not `fetch` calls scattered in
-  components.
+- Server state through `src/api/` — `client.ts` is the only place `fetch` is
+  called.
+- No hardcoded copy. Every user-visible string, accessible names included, is a
+  key you add to both `src/i18n/messages.en.ts` and `messages.pt.ts`, rendered
+  with `t()`. Money, dates and percentages go through `useFormat()`. Portuguese
+  runs 20–30% longer and the layout must absorb it — see "Text expansion" in
+  the design guide.
 - Every interactive element is keyboard reachable with a visible
   `:focus-visible` ring. Buttons are `<button>`, not clickable `<div>`s. Icon-only
   controls carry an `aria-label`.
@@ -45,9 +54,12 @@ Read `docs/design-system-guide.md` **before writing any markup**, every time.
 
 ## Done means
 
-`npm run build` and `npx tsc --noEmit` both pass. Report the components you
-created, which design tokens you used, any state you could not implement because
-the API does not support it yet, and anything you added to the design guide.
+`make check-frontend` passes from the repo root: oxlint, the build (which
+type-checks with `tsc -b`) and Vitest. The orchestrating agent runs the full
+`make check` before it commits. Report the components you created, which design
+tokens you used, the catalogue keys you added, any state you could not
+implement because the API does not support it yet, and anything you added to
+the design guide.
 
 ## Git
 
