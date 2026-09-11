@@ -107,7 +107,7 @@ leave `pt` values as a placeholder for group 6.
 - [x] 6.1 Fill every `pt-PT` value — European Portuguese orthography, not
       `pt-BR`; verify `npm run typecheck` passes and the parity test from 1.7 is
       green
-- [ ] 6.2 Have the `pt-PT` copy read end to end by a native speaker for the
+- [x] 6.2 Have the `pt-PT` copy read end to end by a native speaker for the
       domain vocabulary flagged in `design.md` — Open Questions (orçamento,
       payee, the category and status labels); verify the catalogue diff is
       reviewed as prose before merge
