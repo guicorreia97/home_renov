@@ -3,13 +3,15 @@
 Scoped rules for the React + TypeScript client. The root `AGENTS.md` still
 applies; this adds what is only true here. `CLAUDE.md` is a symlink to this file.
 
-**Status: the expenses screen ships.** `ExpensesScreen` is wired into `App.tsx`
-behind a health check, built on the Vite app, the Tailwind token layer, the typed
-API client, the backend types and the shared components in `src/components/` —
-all verified against the running service and covered by the Vitest suite. Build
-the next screen on what is already here: do not re-scaffold, do not add a second
-HTTP layer, do not rebuild a component that `src/components/` already provides,
-and do not fake API data to move on.
+**Status: the expenses screen ships, in English and European Portuguese.**
+`ExpensesScreen` is wired into `App.tsx` behind a health check, built on the Vite
+app, the Tailwind token layer, the typed API client, the backend types and the
+shared components in `src/components/` — all verified against the running
+service and covered by the Vitest suite. Copy and locale-sensitive values go
+through `src/i18n/`. Build the next screen on what is already here: do not
+re-scaffold, do not add a second HTTP layer or an i18n library, do not rebuild a
+component that `src/components/` already provides, and do not fake API data to
+move on.
 
 ## Stack
 
@@ -24,8 +26,10 @@ in `backend/app/api/main.py`), so do not change the port without changing CORS.
 | `src/api/` | Typed API client. `client.ts` is the **only** place `fetch` is called. |
 | `src/components/` | Reusable presentational components: `Button`, `Badge`, `Modal`, `TextField`, `SelectField`. |
 | `src/features/<name>/` | A screen and the pieces only it uses. `expenses/` is the only one so far. |
+| `src/i18n/` | Hand-written i18n, no library: the `en` and `pt-PT` catalogues (`messages.en.ts` is the source of truth), `LocaleProvider`, `useTranslation()`, `useFormat()`, `LanguageSwitcher`. |
 | `src/types/` | Types mirroring the backend Pydantic models. |
-| `src/lib/` | Small helpers. `format.ts` renders money, dates and enum labels. |
+| `src/lib/` | Small helpers. `format.ts` holds pure money, date and percentage formatters that take an explicit locale — components call them through `useFormat()`, never directly. |
+| `src/test/` | Vitest setup and shared test helpers (`renderWithLocale`, fixtures). Tests sit beside the code they cover. |
 | `tailwind.config.js` | The design tokens as Tailwind classes. Mirrors the guide. |
 | `src/index.css` | The same tokens as CSS custom properties, plus base styles. |
 
@@ -38,7 +42,7 @@ Run from `frontend/`.
 | `npm install` | Install dependencies. `make install` from the root does this too, via `npm ci`. |
 | `npm run dev` | Dev server on :5173. Backend must run separately (`make run`). |
 | `npm run build` | Production build — this also type-checks. |
-| `npx tsc --noEmit` | Type-check only. |
+| `npm run typecheck` | Type-check only (`tsc -b`). Not `npx tsc --noEmit`: the root `tsconfig.json` holds only references, so that checks no files and always passes. |
 | `npm run lint` | oxlint — includes the `jsx-a11y` accessibility rules (rule 6). |
 | `npm test` | Vitest + React Testing Library. |
 
@@ -75,6 +79,14 @@ Node 22, pinned in `.nvmrc` — CI reads that same file.
    variables are public by definition. → `docs/secrets-guide.md`
 8. **Single-user, local-first.** No auth, no accounts, no login screen. If a
    request implies one, stop and ask.
+9. **No hardcoded copy.** Every user-visible string, accessible names included,
+   is a key in `src/i18n/messages.en.ts` plus its twin in `messages.pt.ts`,
+   rendered with `t()` from `useTranslation()`. Money, dates and percentages go
+   through `useFormat()`; enum labels are catalogue keys
+   (`expense.category.<value>` and siblings), never the raw wire value. State
+   holds a `MessageDescriptor`, never a translated string. Portuguese runs
+   20–30% longer → `docs/design-system-guide.md`; testing copy →
+   `docs/testing-guide.md`.
 
 ## API contract (current)
 
