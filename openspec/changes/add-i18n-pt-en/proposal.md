@@ -30,7 +30,7 @@ otherwise ship another few dozen English literals to retrofit.
   `undefined` to `Intl`, which silently follows the *browser* rather than the
   chosen language — they take the active locale explicitly instead. The
   budget-used percentage is built with `toFixed(1)`, which always emits a `.`;
-  in `pt-PT` that must read `62,5 %`, so it moves to `Intl.NumberFormat`.
+  in `pt-PT` that must read `62,5%`, so it moves to `Intl.NumberFormat`.
 - **Enum labels become catalogue entries** keyed by the enum value. This
   removes `formatEnumLabel`, which is English-by-construction.
 - **Validation messages become parameterised keys.** Two of them interpolate a
@@ -80,5 +80,7 @@ recorded in `design.md`.
 **Docs.** `docs/design-system-guide.md` needs a text-expansion note: Portuguese
 runs 20–30% longer than English, and the guide fixes modal width at 480px and
 forbids type below 13px, so labels cannot simply shrink to fit.
+`docs/testing-guide.md` documents the catalogue convention and
+`renderWithLocale`: tests never hardcode a user-visible string.
 
 **Backend.** Unaffected.

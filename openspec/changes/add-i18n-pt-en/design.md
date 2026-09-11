@@ -221,8 +221,7 @@ project rule 9, squash-merged through a green PR.
 
 ## Open Questions
 
-- **Exact `pt-PT` wording for the domain terms** — "budget" as *orçamento*,
-  the category and status labels. "Payee" is settled: the user chose
-  *beneficiário* over *fornecedor*. Deferrable: it changes catalogue
-  values only, not the keys, the specs, the approach or the task breakdown. It
-  needs a native review pass before merge, which is already a task.
+None open. The `pt-PT` wording was read end to end by a native speaker
+(task 6.2): "Payee" is *beneficiário*, the waste category is *Remoção de
+entulho*, and utilities is spelled out as *Água, gás e eletricidade* rather
+than the ambiguous *Consumos*. The rest of the catalogue stood as written.
