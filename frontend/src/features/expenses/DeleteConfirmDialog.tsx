@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Modal } from '../../components/Modal'
 import { Button } from '../../components/Button'
-import { ApiError, deleteExpense } from '../../api'
+import { deleteExpense } from '../../api'
+import { useTranslation } from '../../i18n'
+import { classifyFailure, type FailureKind } from '../../lib/apiFailure'
 import type { Expense } from '../../types'
 
 export interface DeleteConfirmDialogProps {
@@ -12,8 +14,9 @@ export interface DeleteConfirmDialogProps {
 
 /** Deletion is irreversible and there is no undo — this is the one confirmation step. */
 export function DeleteConfirmDialog({ expense, onClose, onDeleted }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation()
   const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<FailureKind | null>(null)
 
   async function handleConfirm(): Promise<void> {
     setDeleting(true)
@@ -22,23 +25,27 @@ export function DeleteConfirmDialog({ expense, onClose, onDeleted }: DeleteConfi
       await deleteExpense(expense.id)
       onDeleted(expense.id)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not delete the expense.')
+      setError(classifyFailure(err))
       setDeleting(false)
     }
   }
 
   return (
-    <Modal title="Delete expense" onClose={onClose}>
+    <Modal title={t('expense.delete.title')} onClose={onClose}>
       <p className="text-body text-text">
-        Delete “{expense.description}” for {expense.payee}? This cannot be undone.
+        {t('expense.delete.confirm', { description: expense.description, payee: expense.payee })}
       </p>
-      {error && <p className="mt-4 text-body text-danger">{error}</p>}
+      {error && (
+        <p className="mt-4 text-body text-danger">
+          {t(error === 'network' ? 'expense.error.network' : 'expense.error.server')}
+        </p>
+      )}
       <div className="mt-6 flex justify-end gap-3">
         <Button variant="secondary" onClick={onClose} disabled={deleting}>
-          Cancel
+          {t('expense.action.cancel')}
         </Button>
         <Button variant="destructive" onClick={() => void handleConfirm()} disabled={deleting}>
-          {deleting ? 'Deleting…' : 'Delete expense'}
+          {deleting ? t('expense.delete.deleting') : t('expense.delete.title')}
         </Button>
       </div>
     </Modal>

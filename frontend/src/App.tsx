@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ApiError, getHealth } from './api'
+import { getHealth } from './api'
+import { AppHeader } from './AppHeader'
 import ExpensesScreen from './features/expenses/ExpensesScreen'
+import { useTranslation } from './i18n'
+import { classifyFailure, type FailureKind } from './lib/apiFailure'
 
 /**
  * Application shell.
@@ -10,9 +13,10 @@ import ExpensesScreen from './features/expenses/ExpensesScreen'
  * rather than as a confusing failure halfway through the expenses screen.
  */
 
-type Connection = { state: 'checking' } | { state: 'connected' } | { state: 'failed'; message: string; unreachable: boolean }
+type Connection = { state: 'checking' } | { state: 'connected' } | { state: 'failed'; kind: FailureKind }
 
 export default function App() {
+  const { t } = useTranslation()
   const [connection, setConnection] = useState<Connection>({ state: 'checking' })
 
   useEffect(() => {
@@ -24,12 +28,7 @@ export default function App() {
         setConnection({ state: 'connected' })
       } catch (error) {
         if (controller.signal.aborted) return
-        const apiError = error instanceof ApiError ? error : null
-        setConnection({
-          state: 'failed',
-          message: apiError?.message ?? 'Unexpected error contacting the API.',
-          unreachable: apiError?.isNetworkError ?? true,
-        })
+        setConnection({ state: 'failed', kind: classifyFailure(error) })
       }
     }
 
@@ -37,24 +36,37 @@ export default function App() {
     return () => controller.abort()
   }, [])
 
+  // `t('app.connection.startHint')` leaves `{command}` untouched (no param
+  // supplied), so splitting on the literal placeholder gives the two halves
+  // around the <code>make run</code> that must stay unlocalised.
+  const [hintBefore, hintAfter] = t('app.connection.startHint').split('{command}')
+
   return (
     <div className="min-h-screen bg-bg text-text">
+      <AppHeader />
+
       {connection.state === 'checking' && (
         <main className="mx-auto max-w-content px-6 py-12">
-          <p className="text-body text-muted">Checking…</p>
+          <p className="text-body text-muted">{t('app.connection.checking')}</p>
         </main>
       )}
 
       {connection.state === 'failed' && (
         <main className="mx-auto max-w-content px-6 py-12">
-          <h1 className="text-page-title text-text">home_renov</h1>
-          <section className="mt-8 rounded-card border border-border bg-surface p-6">
-            <h2 className="text-card-title text-text">Backend connection</h2>
-            <p className="mt-2 text-body text-danger">{connection.message}</p>
-            {connection.unreachable && (
+          <section className="rounded-card border border-border bg-surface p-6">
+            <h1 className="text-card-title text-text">{t('app.connection.title')}</h1>
+            <p className="mt-2 text-body text-danger">
+              {t(
+                connection.kind === 'network'
+                  ? 'app.connection.failed.network'
+                  : 'app.connection.failed.server',
+              )}
+            </p>
+            {connection.kind === 'network' && (
               <p className="mt-2 text-label text-muted">
-                Start the API with <code className="text-text">make run</code> from the repo root,
-                then reload.
+                {hintBefore}
+                <code className="text-text">make run</code>
+                {hintAfter}
               </p>
             )}
           </section>

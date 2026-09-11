@@ -1,3 +1,5 @@
+import { useFormat, useTranslation } from '../../i18n'
+
 export type RemainingConclusionTone = 'success' | 'warning' | 'danger'
 
 export interface RemainingConclusion {
@@ -25,13 +27,17 @@ function clampPercent(percent: number): number {
 
 /** The strip's conclusion: remaining/over-budget figure plus a spend progress bar. */
 export function RemainingConclusionBlock({ conclusion }: { conclusion: RemainingConclusion }) {
+  const { t } = useTranslation()
+  const { formatPercent } = useFormat()
   const barWidth = clampPercent(conclusion.percent ?? 0)
   return (
     <div className="border-t border-border pt-4">
       <div className="flex items-baseline justify-between gap-4">
         <p className="text-label text-muted">{conclusion.label}</p>
         {conclusion.percent !== null && (
-          <p className="text-label text-muted">{conclusion.percent.toFixed(1)}% of budget used</p>
+          <p className="text-label text-muted">
+            {t('budget.remaining.percentUsed', { percent: formatPercent(conclusion.percent) })}
+          </p>
         )}
       </div>
       <p className={`mt-1 text-numeric tabular ${toneTextClass[conclusion.tone]}`}>

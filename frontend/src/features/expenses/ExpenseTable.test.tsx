@@ -1,15 +1,20 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { Locale } from '../../i18n'
 import { anExpense } from '../../test/fixtures'
+import { renderWithLocale } from '../../test/renderWithLocale'
 import { ExpenseTable } from './ExpenseTable'
 
-function renderTable(props: Partial<Parameters<typeof ExpenseTable>[0]> = {}) {
+function renderTable(
+  props: Partial<Parameters<typeof ExpenseTable>[0]> = {},
+  locale: Locale = 'en',
+) {
   const onEdit = vi.fn()
   const onDelete = vi.fn()
   const onAddFirst = vi.fn()
   const onRetry = vi.fn()
   const expenses = [anExpense()]
-  render(
+  const result = renderWithLocale(
     <ExpenseTable
       allExpenses={expenses}
       visible={expenses}
@@ -21,75 +26,93 @@ function renderTable(props: Partial<Parameters<typeof ExpenseTable>[0]> = {}) {
       onRetry={onRetry}
       {...props}
     />,
+    locale,
   )
-  return { onEdit, onDelete, onAddFirst, onRetry }
+  return { onEdit, onDelete, onAddFirst, onRetry, t: result.t }
 }
 
 describe('ExpenseTable', () => {
   it('renders a row per visible expense, under the column headers', () => {
-    renderTable()
+    const { t } = renderTable()
 
-    expect(screen.getByRole('columnheader', { name: 'Description' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Amount' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('columnheader', { name: t('expenses.table.header.description') }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('columnheader', { name: t('expenses.table.header.amount') }),
+    ).toBeInTheDocument()
     expect(screen.getAllByRole('row')).toHaveLength(2) // header + one expense
   })
 
   it('shows a loading line before the first response arrives', () => {
-    renderTable({ allExpenses: null, visible: [] })
+    const { t } = renderTable({ allExpenses: null, visible: [] })
 
-    expect(screen.getByText('Loading expenses…')).toBeInTheDocument()
+    expect(screen.getByText(t('expenses.table.loading'))).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  it('shows the error instead of the table when the list failed', () => {
-    renderTable({ error: 'Could not reach the API' })
+  it('shows a network failure instead of the table, never the backend detail', () => {
+    const { t } = renderTable({ error: 'network' })
 
-    expect(screen.getByText('Could not reach the API')).toBeInTheDocument()
+    expect(screen.getByText(t('expenses.error.network'))).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('shows a server failure with different copy from a network failure', () => {
+    const { t } = renderTable({ error: 'server' })
+
+    expect(screen.getByText(t('expenses.error.server'))).toBeInTheDocument()
+    expect(screen.queryByText(t('expenses.error.network'))).not.toBeInTheDocument()
   })
 
   it('offers a way out of the error without reloading the page', async () => {
-    const { onRetry } = renderTable({ error: 'Could not reach the API' })
+    const { onRetry, t } = renderTable({ error: 'network' })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await userEvent.click(screen.getByRole('button', { name: t('expenses.table.retry') }))
 
     expect(onRetry).toHaveBeenCalledOnce()
   })
 
   it('does not offer the empty-state CTA in place of the error', () => {
-    renderTable({ allExpenses: [], visible: [], error: 'Could not reach the API' })
+    const { t } = renderTable({ allExpenses: [], visible: [], error: 'network' })
 
-    expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument()
-    expect(screen.queryByText(/No expenses recorded yet/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: t('expenses.add') })).not.toBeInTheDocument()
+    expect(screen.queryByText(t('expenses.table.empty'))).not.toBeInTheDocument()
   })
 
   it('offers a real next action when there are no expenses at all', async () => {
-    const { onAddFirst } = renderTable({ allExpenses: [], visible: [] })
+    const { onAddFirst, t } = renderTable({ allExpenses: [], visible: [] })
 
-    expect(screen.getByText(/No expenses recorded yet/i)).toBeInTheDocument()
+    expect(screen.getByText(t('expenses.table.empty'))).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Add expense' }))
+    await userEvent.click(screen.getByRole('button', { name: t('expenses.add') }))
     expect(onAddFirst).toHaveBeenCalledOnce()
   })
 
   it('keeps the empty-state button off the accent, which the header action owns', () => {
-    renderTable({ allExpenses: [], visible: [] })
+    const { t } = renderTable({ allExpenses: [], visible: [] })
 
-    expect(screen.getByRole('button', { name: 'Add expense' }).className).not.toContain('bg-accent')
+    expect(screen.getByRole('button', { name: t('expenses.add') }).className).not.toContain('bg-accent')
   })
 
   it('distinguishes "no expenses" from "none match the filters"', () => {
-    renderTable({ allExpenses: [anExpense()], visible: [] })
+    const { t } = renderTable({ allExpenses: [anExpense()], visible: [] })
 
-    expect(screen.getByText(/No expenses match the current filters/i)).toBeInTheDocument()
-    expect(screen.queryByText(/No expenses recorded yet/i)).not.toBeInTheDocument()
+    expect(screen.getByText(t('expenses.table.emptyFiltered'))).toBeInTheDocument()
+    expect(screen.queryByText(t('expenses.table.empty'))).not.toBeInTheDocument()
   })
 
   it('passes the row actions through to the caller', async () => {
-    const { onEdit, onDelete } = renderTable()
+    const { onEdit, onDelete, t } = renderTable()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Edit Kitchen worktop' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Delete Kitchen worktop' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: t('expense.action.editNamed', { description: 'Kitchen worktop' }) }),
+    )
+    await userEvent.click(
+      screen.getByRole('button', {
+        name: t('expense.action.deleteNamed', { description: 'Kitchen worktop' }),
+      }),
+    )
 
     expect(onEdit).toHaveBeenCalledOnce()
     expect(onDelete).toHaveBeenCalledOnce()
@@ -101,5 +124,12 @@ describe('ExpenseTable', () => {
 
     expect(screen.getByText('Tiles')).toBeInTheDocument()
     expect(screen.queryByText('Worktop')).not.toBeInTheDocument()
+  })
+
+  it('renders every header and the empty state in Portuguese', () => {
+    const { t } = renderTable({ allExpenses: [], visible: [] }, 'pt-PT')
+
+    expect(screen.getByText(t('expenses.table.empty'))).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t('expenses.add') })).toBeInTheDocument()
   })
 })

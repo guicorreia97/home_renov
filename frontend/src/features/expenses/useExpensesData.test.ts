@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { aBudget, aSummary, anExpense } from '../../test/fixtures'
-import { apiCalls, stubApi } from '../../test/setup'
+import { apiCalls, stubApi, stubNetworkFailure } from '../../test/setup'
 import { useExpensesData } from './useExpensesData'
 
 function stubHappyPath(): void {
@@ -52,7 +52,7 @@ describe('useExpensesData on mount', () => {
     const { result } = renderHook(() => useExpensesData())
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(result.current.summaryError).toBe('Summary exploded')
+    expect(result.current.summaryError).toBe('server')
     expect(result.current.expenses).toHaveLength(1)
     expect(result.current.expensesError).toBeNull()
   })
@@ -66,8 +66,21 @@ describe('useExpensesData on mount', () => {
 
     const { result } = renderHook(() => useExpensesData())
 
-    await waitFor(() => expect(result.current.expensesError).toBe('Service unavailable'))
+    await waitFor(() => expect(result.current.expensesError).toBe('server'))
     expect(result.current.expenses).toBeNull()
+  })
+
+  it('reports a request that never reached the API as a network failure, distinct from a server one', async () => {
+    stubApi({
+      'GET /expenses': { body: [] },
+      'GET /budget': { body: aBudget() },
+      'GET /budget/summary': { body: aSummary() },
+    })
+    stubNetworkFailure()
+
+    const { result } = renderHook(() => useExpensesData())
+
+    await waitFor(() => expect(result.current.expensesError).toBe('network'))
   })
 })
 
@@ -176,7 +189,7 @@ describe('useExpensesData saveBudget', () => {
     })
 
     expect(saved).toBe(false)
-    expect(result.current.budgetSaveError).toBe('planned_budget: must be non-negative')
+    expect(result.current.budgetSaveError).toBe('server')
     expect(result.current.budget?.planned_budget).toBe('50000.00')
     expect(result.current.budgetSaving).toBe(false)
   })

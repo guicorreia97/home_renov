@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="en" class="dark">
+<!--
+  `lang` is intentionally omitted here: `LocaleProvider` sets
+  `document.documentElement.lang` as soon as it mounts (frontend/src/i18n/LocaleProvider.tsx),
+  before there is any content in `#root` for assistive technology to announce.
+-->
+<html class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

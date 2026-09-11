@@ -37,13 +37,17 @@ describe('validateExpenseForm', () => {
     expect(hasErrors(validateExpenseForm(expenseValues()))).toBe(false)
   })
 
-  it('rejects an empty description', () => {
-    expect(validateExpenseForm(expenseValues({ description: '  ' })).description).toBeDefined()
+  it('rejects an empty description with a descriptor, not a translated string', () => {
+    const errors = validateExpenseForm(expenseValues({ description: '  ' }))
+
+    expect(errors.description).toEqual({ key: 'expense.error.descriptionLength' })
   })
 
   it('rejects a zero amount, because an expense must be positive', () => {
     for (const amount of ['0', '0.0', '0.00']) {
-      expect(validateExpenseForm(expenseValues({ amount })).amount).toBeDefined()
+      expect(validateExpenseForm(expenseValues({ amount })).amount).toEqual({
+        key: 'expense.error.amountInvalid',
+      })
     }
   })
 
@@ -60,7 +64,24 @@ describe('validateExpenseForm', () => {
   })
 
   it('requires a date', () => {
-    expect(validateExpenseForm(expenseValues({ incurred_on: '' })).incurred_on).toBeDefined()
+    expect(validateExpenseForm(expenseValues({ incurred_on: '' })).incurred_on).toEqual({
+      key: 'expense.error.dateRequired',
+    })
+  })
+
+  it('rejects an over-long payee, room, invoice reference and notes, each with its own key', () => {
+    expect(validateExpenseForm(expenseValues({ payee: '' })).payee).toEqual({
+      key: 'expense.error.payeeLength',
+    })
+    expect(validateExpenseForm(expenseValues({ room: 'x'.repeat(81) })).room).toEqual({
+      key: 'expense.error.roomLength',
+    })
+    expect(
+      validateExpenseForm(expenseValues({ invoice_reference: 'x'.repeat(81) })).invoice_reference,
+    ).toEqual({ key: 'expense.error.invoiceReferenceLength' })
+    expect(validateExpenseForm(expenseValues({ notes: 'x'.repeat(1001) })).notes).toEqual({
+      key: 'expense.error.notesLength',
+    })
   })
 })
 
@@ -124,31 +145,40 @@ describe('validateBudgetForm', () => {
     expect(validateBudgetForm(budgetValues({ planned_budget: '0' })).planned_budget).toBeUndefined()
   })
 
-  it('rejects a negative amount', () => {
-    expect(validateBudgetForm(budgetValues({ planned_budget: '-1' })).planned_budget).toBeDefined()
+  it('rejects a negative amount, naming the field by key, not by translated text', () => {
+    expect(validateBudgetForm(budgetValues({ planned_budget: '-1' })).planned_budget).toEqual({
+      key: 'budget.error.notANumber',
+      params: { field: { key: 'budget.field.plannedBudget' } },
+    })
   })
 
   it('rejects more than two decimals', () => {
     expect(
       validateBudgetForm(budgetValues({ purchase_price: '1000.123' })).purchase_price,
-    ).toBeDefined()
+    ).toEqual({
+      key: 'budget.error.notANumber',
+      params: { field: { key: 'budget.field.purchasePrice' } },
+    })
   })
 
-  it('rejects an amount beyond the backend max_digits cap', () => {
+  it('rejects an amount beyond the backend max_digits cap, with its own key', () => {
     expect(
       validateBudgetForm(budgetValues({ target_sale_price: '99999999999.99' })).target_sale_price,
-    ).toBeDefined()
+    ).toEqual({
+      key: 'budget.error.tooLarge',
+      params: { field: { key: 'budget.field.targetSalePrice' } },
+    })
     expect(
       validateBudgetForm(budgetValues({ target_sale_price: '9999999999.99' })).target_sale_price,
     ).toBeUndefined()
   })
 
-  it('reports each bad field separately, naming it', () => {
+  it('reports each bad field separately, each naming only its own field key', () => {
     const errors = validateBudgetForm(
       budgetValues({ planned_budget: 'lots', purchase_price: '180000' }),
     )
 
-    expect(errors.planned_budget).toContain('Planned budget')
+    expect(errors.planned_budget?.params).toEqual({ field: { key: 'budget.field.plannedBudget' } })
     expect(errors.purchase_price).toBeUndefined()
   })
 })

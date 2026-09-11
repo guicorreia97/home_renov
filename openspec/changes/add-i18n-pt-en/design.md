@@ -160,6 +160,18 @@ It sits in the app shell header and is built from the existing `SelectField`
 (two options) — no new tokens, no new component shape, per project rule 7. Two
 options do not justify a segmented control that would need new tokens.
 
+`App.tsx` had no header, so one is added: rendered in every connection state
+(checking, failed, connected), the product name on the left and the switcher on
+the right with its visible label — the layout the user approved. Its options
+are endonyms (English, Português), identical in both catalogues, so a reader
+can find their own language whichever one is showing.
+
+Modals are native `showModal()` dialogs, which make the page behind them inert,
+so the switcher cannot be operated while one is open. The spec scopes the
+control to "whenever no modal is open"; the state guarantee is kept regardless —
+a locale change during an open form leaves its values, the modal and its
+(re-translated) errors intact.
+
 `document.documentElement.lang` is set from an effect in the provider, keeping
 the DOM attribute and React state in one place.
 
@@ -210,7 +222,7 @@ project rule 9, squash-merged through a green PR.
 ## Open Questions
 
 - **Exact `pt-PT` wording for the domain terms** — "budget" as *orçamento*,
-  the category and status labels, and whether "payee" is best as *beneficiário*
-  or *fornecedor* in a renovation context. Deferrable: it changes catalogue
+  the category and status labels. "Payee" is settled: the user chose
+  *beneficiário* over *fornecedor*. Deferrable: it changes catalogue
   values only, not the keys, the specs, the approach or the task breakdown. It
   needs a native review pass before merge, which is already a task.

@@ -1,12 +1,17 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { Locale } from '../../i18n'
 import { aBudget } from '../../test/fixtures'
+import { renderWithLocale } from '../../test/renderWithLocale'
 import { BudgetSettingsModal } from './BudgetSettingsModal'
 
-function renderModal(props: Partial<Parameters<typeof BudgetSettingsModal>[0]> = {}) {
+function renderModal(
+  props: Partial<Parameters<typeof BudgetSettingsModal>[0]> = {},
+  locale: Locale = 'en',
+) {
   const onSave = vi.fn().mockResolvedValue(true)
   const onClose = vi.fn()
-  render(
+  const { t } = renderWithLocale(
     <BudgetSettingsModal
       budget={aBudget()}
       saving={false}
@@ -15,31 +20,32 @@ function renderModal(props: Partial<Parameters<typeof BudgetSettingsModal>[0]> =
       onClose={onClose}
       {...props}
     />,
+    locale,
   )
-  return { onSave, onClose }
+  return { onSave, onClose, t }
 }
 
-describe('BudgetSettingsModal', () => {
+describe.each(['en', 'pt-PT'] as const)('BudgetSettingsModal (%s)', (locale) => {
   it('is a dialog with an accessible name and the three targets', () => {
-    renderModal()
+    const { t } = renderModal({}, locale)
 
-    expect(screen.getByRole('dialog')).toHaveAccessibleName('Budget settings')
-    expect(screen.getByLabelText('Planned budget')).toHaveValue('50000.00')
-    expect(screen.getByLabelText('Purchase price')).toHaveValue('180000.00')
-    expect(screen.getByLabelText('Target sale price')).toHaveValue('260000.00')
+    expect(screen.getByRole('dialog')).toHaveAccessibleName(t('budget.settings.title'))
+    expect(screen.getByLabelText(t('budget.field.plannedBudget'))).toHaveValue('50000.00')
+    expect(screen.getByLabelText(t('budget.field.purchasePrice'))).toHaveValue('180000.00')
+    expect(screen.getByLabelText(t('budget.field.targetSalePrice'))).toHaveValue('260000.00')
   })
 
   it('starts empty when no budget has been set', () => {
-    renderModal({ budget: null })
+    const { t } = renderModal({ budget: null }, locale)
 
-    expect(screen.getByLabelText('Planned budget')).toHaveValue('')
+    expect(screen.getByLabelText(t('budget.field.plannedBudget'))).toHaveValue('')
   })
 
   it('saves the typed targets as strings and closes on success', async () => {
-    const { onSave, onClose } = renderModal({ budget: null })
+    const { onSave, onClose, t } = renderModal({ budget: null }, locale)
 
-    await userEvent.type(screen.getByLabelText('Planned budget'), '1234.50')
-    await userEvent.click(screen.getByRole('button', { name: 'Save budget' }))
+    await userEvent.type(screen.getByLabelText(t('budget.field.plannedBudget')), '1234.50')
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.save') }))
 
     expect(onSave).toHaveBeenCalledWith({
       planned_budget: '1234.50',
@@ -50,10 +56,10 @@ describe('BudgetSettingsModal', () => {
   })
 
   it('sends a cleared field as null, never as zero', async () => {
-    const { onSave } = renderModal({ budget: aBudget({ planned_budget: '50000.00' }) })
+    const { onSave, t } = renderModal({ budget: aBudget({ planned_budget: '50000.00' }) }, locale)
 
-    await userEvent.clear(screen.getByLabelText('Planned budget'))
-    await userEvent.click(screen.getByRole('button', { name: 'Save budget' }))
+    await userEvent.clear(screen.getByLabelText(t('budget.field.plannedBudget')))
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.save') }))
 
     const payload = onSave.mock.calls[0][0] as Record<string, unknown>
     expect(payload.planned_budget).toBeNull()
@@ -61,62 +67,81 @@ describe('BudgetSettingsModal', () => {
   })
 
   it('accepts zero as a deliberate target, unlike an expense amount', async () => {
-    const { onSave } = renderModal({ budget: null })
+    const { onSave, t } = renderModal({ budget: null }, locale)
 
-    await userEvent.type(screen.getByLabelText('Planned budget'), '0')
-    await userEvent.click(screen.getByRole('button', { name: 'Save budget' }))
+    await userEvent.type(screen.getByLabelText(t('budget.field.plannedBudget')), '0')
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.save') }))
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ planned_budget: '0' }))
   })
 
-  it('blocks an invalid amount before it reaches the API', async () => {
-    const { onSave } = renderModal({ budget: null })
+  it('blocks an invalid amount before it reaches the API, with the field named in the message', async () => {
+    const { onSave, t } = renderModal({ budget: null }, locale)
 
-    await userEvent.type(screen.getByLabelText('Planned budget'), '-5')
-    await userEvent.click(screen.getByRole('button', { name: 'Save budget' }))
+    await userEvent.type(screen.getByLabelText(t('budget.field.plannedBudget')), '-5')
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.save') }))
 
     expect(onSave).not.toHaveBeenCalled()
-    expect(screen.getByLabelText('Planned budget')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(t('budget.field.plannedBudget'))).toHaveAttribute('aria-invalid', 'true')
+    expect(
+      screen.getByText(t('budget.error.notANumber', { field: t('budget.field.plannedBudget') })),
+    ).toBeInTheDocument()
   })
 
   it('shows no validation errors before the first submit', () => {
-    renderModal({ budget: aBudget({ planned_budget: 'nonsense' }) })
+    const { t } = renderModal({ budget: aBudget({ planned_budget: 'nonsense' }) }, locale)
 
-    expect(screen.queryByText(/must be a non-negative number/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(t('budget.error.notANumber', { field: t('budget.field.plannedBudget') })),
+    ).not.toBeInTheDocument()
   })
 
-  it('stays open and shows the API error when the save is rejected', async () => {
+  it('stays open and shows a network failure when the save is rejected', async () => {
     const onSave = vi.fn().mockResolvedValue(false)
     const onClose = vi.fn()
-    render(
+    const { t } = renderWithLocale(
       <BudgetSettingsModal
         budget={null}
         saving={false}
-        saveError="planned_budget: must be non-negative"
+        saveError="network"
         onSave={onSave}
         onClose={onClose}
       />,
+      locale,
     )
 
-    await userEvent.click(screen.getByRole('button', { name: 'Save budget' }))
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.save') }))
 
     expect(onClose).not.toHaveBeenCalled()
-    expect(screen.getByText('planned_budget: must be non-negative')).toBeInTheDocument()
+    expect(screen.getByText(t('budget.error.network'))).toBeInTheDocument()
+  })
+
+  it('shows a server failure with different copy from a network failure', () => {
+    const { t } = renderModal({ saveError: 'server' }, locale)
+
+    expect(screen.getByText(t('budget.error.server'))).toBeInTheDocument()
+    expect(screen.queryByText(t('budget.error.network'))).not.toBeInTheDocument()
   })
 
   it('disables both actions and says so while saving', () => {
-    renderModal({ saving: true })
+    const { t } = renderModal({ saving: true }, locale)
 
-    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: t('budget.action.saving') })).toBeDisabled()
+    expect(screen.getByRole('button', { name: t('budget.action.cancel') })).toBeDisabled()
   })
 
   it('closes without saving when cancelled', async () => {
-    const { onSave, onClose } = renderModal()
+    const { onSave, onClose, t } = renderModal({}, locale)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await userEvent.click(screen.getByRole('button', { name: t('budget.action.cancel') }))
 
     expect(onClose).toHaveBeenCalledOnce()
     expect(onSave).not.toHaveBeenCalled()
+  })
+
+  it('shows the same "leave blank" hint on all three targets', () => {
+    const { t } = renderModal({}, locale)
+
+    expect(screen.getAllByText(t('budget.settings.clearHint'))).toHaveLength(3)
   })
 })

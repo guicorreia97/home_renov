@@ -1,9 +1,11 @@
+import { describe } from '../../i18n'
 import type { Budget, BudgetUpdate, Expense, ExpenseCreate, ExpenseUpdate } from '../../types'
-import type {
-  BudgetFormErrors,
-  BudgetFormValues,
-  ExpenseFormErrors,
-  ExpenseFormValues,
+import {
+  BUDGET_FIELD_KEYS,
+  type BudgetFormErrors,
+  type BudgetFormValues,
+  type ExpenseFormErrors,
+  type ExpenseFormValues,
 } from './formTypes'
 
 /** Matches backend `PositiveMoney`: a positive decimal with up to 2 places. */
@@ -12,18 +14,22 @@ const AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/
 /**
  * Mirrors backend/app/src/models/expense.py exactly, so the user sees an inline
  * message instead of a 422 round trip.
+ *
+ * Returns a descriptor per invalid field, not a translated string — see the
+ * rule "never store a translated string in state" (design.md, decision 4 and
+ * the frontend-i18n spec). The component translates at render.
  */
 export function validateExpenseForm(values: ExpenseFormValues): ExpenseFormErrors {
   const errors: ExpenseFormErrors = {}
 
   const description = values.description.trim()
   if (description.length < 1 || description.length > 200) {
-    errors.description = 'Description must be 1–200 characters.'
+    errors.description = describe('expense.error.descriptionLength')
   }
 
   const payee = values.payee.trim()
   if (payee.length < 1 || payee.length > 120) {
-    errors.payee = 'Payee must be 1–120 characters.'
+    errors.payee = describe('expense.error.payeeLength')
   }
 
   // Positivity is checked on the string, not via Number(): the pattern already
@@ -33,23 +39,23 @@ export function validateExpenseForm(values: ExpenseFormValues): ExpenseFormError
   const amount = values.amount.trim()
   const isZero = /^0+(\.0{1,2})?$/.test(amount)
   if (!AMOUNT_PATTERN.test(amount) || isZero) {
-    errors.amount = 'Amount must be a positive number, e.g. 250 or 250.50.'
+    errors.amount = describe('expense.error.amountInvalid')
   }
 
   if (!values.incurred_on) {
-    errors.incurred_on = 'Enter the date the expense was incurred.'
+    errors.incurred_on = describe('expense.error.dateRequired')
   }
 
   if (values.room.trim().length > 80) {
-    errors.room = 'Room must be 80 characters or fewer.'
+    errors.room = describe('expense.error.roomLength')
   }
 
   if (values.invoice_reference.trim().length > 80) {
-    errors.invoice_reference = 'Invoice reference must be 80 characters or fewer.'
+    errors.invoice_reference = describe('expense.error.invoiceReferenceLength')
   }
 
   if (values.notes.trim().length > 1000) {
-    errors.notes = 'Notes must be 1000 characters or fewer.'
+    errors.notes = describe('expense.error.notesLength')
   }
 
   return errors
@@ -137,18 +143,19 @@ const BUDGET_FIELDS: (keyof BudgetFormValues)[] = [
   'target_sale_price',
 ]
 
-const BUDGET_FIELD_LABELS: Record<keyof BudgetFormValues, string> = {
-  planned_budget: 'Planned budget',
-  purchase_price: 'Purchase price',
-  target_sale_price: 'Target sale price',
-}
-
 /**
  * Mirrors backend/app/src/models/budget.py, so the user sees an inline message
  * instead of a 422 round trip.
  *
  * An empty field is valid: it clears the target. Validation works on the string
  * throughout — no amount is parsed into a number here (see types/money.ts).
+ *
+ * The field name is interpolated by *key*, not by translated text —
+ * `describe('budget.error.notANumber', { field: { key: BUDGET_FIELD_KEYS[field] } })`
+ * — so the whole sentence (subject and all) comes from one catalogue message
+ * per language rather than being built by prefixing a translated label
+ * (design.md, decision 4). `BUDGET_FIELD_KEYS` is shared with the settings
+ * modal, which uses the same keys as its `TextField` labels.
  */
 export function validateBudgetForm(values: BudgetFormValues): BudgetFormErrors {
   const errors: BudgetFormErrors = {}
@@ -157,15 +164,15 @@ export function validateBudgetForm(values: BudgetFormValues): BudgetFormErrors {
     const raw = values[field].trim()
     if (raw.length === 0) continue
 
-    const label = BUDGET_FIELD_LABELS[field]
+    const fieldParam = { field: { key: BUDGET_FIELD_KEYS[field] } }
     if (!MONEY_PATTERN.test(raw)) {
-      errors[field] = `${label} must be a non-negative number, e.g. 45000 or 45000.50.`
+      errors[field] = describe('budget.error.notANumber', fieldParam)
       continue
     }
 
     const [whole] = raw.split('.')
     if (whole.replace(/^0+(?=\d)/, '').length > MAX_INTEGER_DIGITS) {
-      errors[field] = `${label} is too large.`
+      errors[field] = describe('budget.error.tooLarge', fieldParam)
     }
   }
 

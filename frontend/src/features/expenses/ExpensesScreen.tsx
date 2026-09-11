@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button } from '../../components/Button'
+import { useTranslation } from '../../i18n'
 import type { Expense } from '../../types'
 import { BudgetSettingsModal } from './BudgetSettingsModal'
 import { BudgetSummaryStrip } from './BudgetSummaryStrip'
@@ -35,6 +36,7 @@ const DEFAULT_FILTERS: ExpenseFiltersValue = { status: 'all', category: 'all' }
 const FALLBACK_CURRENCY = 'USD'
 
 export default function ExpensesScreen() {
+  const { t } = useTranslation()
   const {
     expenses,
     expensesError,
@@ -71,9 +73,9 @@ export default function ExpensesScreen() {
   return (
     <div className="mx-auto max-w-content px-6 py-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-page-title text-text">Expenses</h1>
+        <h1 className="text-page-title text-text">{t('expenses.title')}</h1>
         <Button variant="primary" onClick={() => setModal({ kind: 'form', editing: null })}>
-          Add expense
+          {t('expenses.add')}
         </Button>
       </div>
 

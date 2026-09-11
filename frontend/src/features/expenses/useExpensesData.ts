@@ -1,39 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  ApiError,
-  getBudget,
-  getBudgetSummary,
-  listExpenses,
-  updateBudget,
-} from '../../api'
+import { getBudget, getBudgetSummary, listExpenses, updateBudget } from '../../api'
+import { classifyFailure, type FailureKind } from '../../lib/apiFailure'
 import type { Budget, BudgetSummary, BudgetUpdate, Expense } from '../../types'
 
 function sortNewestFirst(expenses: Expense[]): Expense[] {
   return [...expenses].sort((a, b) => b.incurred_on.localeCompare(a.incurred_on))
 }
 
-function messageFor(error: unknown): string {
-  return error instanceof ApiError ? error.message : 'Unexpected error contacting the API.'
-}
-
 export interface ExpensesData {
   expenses: Expense[] | null
   expensesLoading: boolean
-  expensesError: string | null
+  /** A failure kind, not backend text — translate at render (design.md, decision 8). */
+  expensesError: FailureKind | null
 
   summary: BudgetSummary | null
   summaryLoading: boolean
-  summaryError: string | null
+  summaryError: FailureKind | null
 
   budget: Budget | null
   budgetLoading: boolean
-  budgetError: string | null
+  budgetError: FailureKind | null
 
   /** True while any of the three reads is in flight. */
   loading: boolean
 
   budgetSaving: boolean
-  budgetSaveError: string | null
+  budgetSaveError: FailureKind | null
 
   /** Re-fetch all three — call after any successful expense mutation. */
   refresh: () => void
@@ -53,18 +45,18 @@ export interface ExpensesData {
 export function useExpensesData(): ExpensesData {
   const [expenses, setExpenses] = useState<Expense[] | null>(null)
   const [expensesLoading, setExpensesLoading] = useState(true)
-  const [expensesError, setExpensesError] = useState<string | null>(null)
+  const [expensesError, setExpensesError] = useState<FailureKind | null>(null)
 
   const [summary, setSummary] = useState<BudgetSummary | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(true)
-  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [summaryError, setSummaryError] = useState<FailureKind | null>(null)
 
   const [budget, setBudget] = useState<Budget | null>(null)
   const [budgetLoading, setBudgetLoading] = useState(true)
-  const [budgetError, setBudgetError] = useState<string | null>(null)
+  const [budgetError, setBudgetError] = useState<FailureKind | null>(null)
 
   const [budgetSaving, setBudgetSaving] = useState(false)
-  const [budgetSaveError, setBudgetSaveError] = useState<string | null>(null)
+  const [budgetSaveError, setBudgetSaveError] = useState<FailureKind | null>(null)
 
   const loadRef = useRef<AbortController | null>(null)
   const saveRef = useRef<AbortController | null>(null)
@@ -78,7 +70,7 @@ export function useExpensesData(): ExpensesData {
       setExpensesError(null)
     } catch (error) {
       if (signal.aborted) return
-      setExpensesError(messageFor(error))
+      setExpensesError(classifyFailure(error))
     } finally {
       if (!signal.aborted) setExpensesLoading(false)
     }
@@ -93,7 +85,7 @@ export function useExpensesData(): ExpensesData {
       setSummaryError(null)
     } catch (error) {
       if (signal.aborted) return
-      setSummaryError(messageFor(error))
+      setSummaryError(classifyFailure(error))
     } finally {
       if (!signal.aborted) setSummaryLoading(false)
     }
@@ -108,7 +100,7 @@ export function useExpensesData(): ExpensesData {
       setBudgetError(null)
     } catch (error) {
       if (signal.aborted) return
-      setBudgetError(messageFor(error))
+      setBudgetError(classifyFailure(error))
     } finally {
       if (!signal.aborted) setBudgetLoading(false)
     }
@@ -148,7 +140,7 @@ export function useExpensesData(): ExpensesData {
       return true
     } catch (error) {
       if (signal.aborted) return false
-      setBudgetSaveError(messageFor(error))
+      setBudgetSaveError(classifyFailure(error))
       return false
     } finally {
       if (!signal.aborted) setBudgetSaving(false)

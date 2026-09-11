@@ -1,11 +1,18 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { en, pt } from '../../i18n'
+import type { Locale, MessageKey } from '../../i18n'
+import { formatMoney, formatPercent } from '../../lib/format'
 import { aSummary } from '../../test/fixtures'
+import { folded, renderWithLocale } from '../../test/renderWithLocale'
 import { BudgetSummaryStrip } from './BudgetSummaryStrip'
 
-function renderStrip(props: Partial<Parameters<typeof BudgetSummaryStrip>[0]> = {}) {
+function renderStrip(
+  props: Partial<Parameters<typeof BudgetSummaryStrip>[0]> = {},
+  locale: Locale = 'en',
+) {
   const onEditBudget = vi.fn()
-  render(
+  const { t } = renderWithLocale(
     <BudgetSummaryStrip
       summary={aSummary()}
       summaryLoading={false}
@@ -15,8 +22,9 @@ function renderStrip(props: Partial<Parameters<typeof BudgetSummaryStrip>[0]> = 
       onEditBudget={onEditBudget}
       {...props}
     />,
+    locale,
   )
-  return { onEditBudget }
+  return { onEditBudget, t }
 }
 
 /** The conclusion renders label, then amount, then the bar — not a dt/dd pair. */
@@ -30,35 +38,37 @@ function barFill(): Element | undefined {
 
 describe('BudgetSummaryStrip', () => {
   it('shows the headline figures', () => {
-    renderStrip()
+    const { t } = renderStrip()
 
-    expect(screen.getByText('Expenses recorded')).toBeInTheDocument()
-    expect(screen.getByText('Total paid')).toBeInTheDocument()
-    expect(screen.getByText('Total forecast')).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.expensesRecorded'))).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.totalPaid'))).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.totalForecast'))).toBeInTheDocument()
   })
 
   it('shows the remaining budget in the success tone when under budget', () => {
-    renderStrip({
+    const { t } = renderStrip({
       summary: aSummary({ remaining_budget: '48765.50', over_budget: false, budget_used_percent: 2.5 }),
     })
 
-    expect(screen.getByText('Remaining budget')).toBeInTheDocument()
-    expect(amountFor('Remaining budget')?.className).toContain('text-success')
+    expect(screen.getByText(t('budget.summary.remaining'))).toBeInTheDocument()
+    expect(amountFor(t('budget.summary.remaining'))?.className).toContain('text-success')
   })
 
-  it('switches to "Over budget by" in the danger tone when over', () => {
-    renderStrip({
+  it('switches to the over-budget label in the danger tone when over', () => {
+    const { t } = renderStrip({
       summary: aSummary({ remaining_budget: '-500.00', over_budget: true, budget_used_percent: 101 }),
     })
 
-    expect(screen.queryByText('Remaining budget')).not.toBeInTheDocument()
-    expect(amountFor('Over budget by')?.className).toContain('text-danger')
+    expect(screen.queryByText(t('budget.summary.remaining'))).not.toBeInTheDocument()
+    expect(amountFor(t('budget.summary.overBudget'))?.className).toContain('text-danger')
   })
 
   it('states the percentage of the budget used, which the API computed all along', () => {
-    renderStrip({ summary: aSummary({ budget_used_percent: 4.22 }) })
+    const { t } = renderStrip({ summary: aSummary({ budget_used_percent: 4.22 }) })
 
-    expect(screen.getByText('4.2% of budget used')).toBeInTheDocument()
+    expect(
+      screen.getByText(folded(t('budget.remaining.percentUsed', { percent: formatPercent(4.22, 'en') }))),
+    ).toBeInTheDocument()
   })
 
   it('fills the bar to the percentage used, in the matching tone', () => {
@@ -76,12 +86,12 @@ describe('BudgetSummaryStrip', () => {
   })
 
   it('turns red from 90%, before the budget is actually gone', () => {
-    renderStrip({ summary: aSummary({ budget_used_percent: 90, over_budget: false }) })
+    const { t } = renderStrip({ summary: aSummary({ budget_used_percent: 90, over_budget: false }) })
 
     const fill = barFill()
     expect(fill?.className).toContain('bg-danger')
     expect(fill?.className).not.toContain('bg-warning')
-    expect(amountFor('Remaining budget')?.className).toContain('text-danger')
+    expect(amountFor(t('budget.summary.remaining'))?.className).toContain('text-danger')
   })
 
   it('stays merely warning just below 90%', () => {
@@ -107,35 +117,41 @@ describe('BudgetSummaryStrip', () => {
   })
 
   it('still shows the remaining figure when the API sends no percentage', () => {
-    renderStrip({ summary: aSummary({ budget_used_percent: null }) })
+    const { t } = renderStrip({ summary: aSummary({ budget_used_percent: null }) })
 
-    expect(screen.getByText('Remaining budget')).toBeInTheDocument()
-    expect(screen.queryByText(/of budget used/)).not.toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.remaining'))).toBeInTheDocument()
+    // The sentence's fixed words come from the catalogue, so a reword cannot
+    // quietly turn this into an assertion that always passes.
+    const fixedWords = t('budget.remaining.percentUsed').replace('{percent}', '').trim()
+    expect(fixedWords).not.toBe('')
+    expect(document.body.textContent).not.toContain(fixedWords)
   })
 
   it('shows no conclusion at all when there is no budget to conclude against', () => {
-    renderStrip({
+    const { t } = renderStrip({
       summary: aSummary({ planned_budget: null, remaining_budget: null, budget_used_percent: null }),
     })
 
-    expect(screen.queryByText('Remaining budget')).not.toBeInTheDocument()
+    expect(screen.queryByText(t('budget.summary.remaining'))).not.toBeInTheDocument()
     expect(barFill()).toBeUndefined()
   })
 
   it('tells the user what to do when no budget is set, instead of showing a blank', () => {
-    renderStrip({ summary: aSummary({ planned_budget: null, remaining_budget: null }) })
+    const { t } = renderStrip({ summary: aSummary({ planned_budget: null, remaining_budget: null }) })
 
-    expect(screen.queryByText('Remaining budget')).not.toBeInTheDocument()
+    expect(screen.queryByText(t('budget.summary.remaining'))).not.toBeInTheDocument()
     // A real sentence naming the next action, not "No data".
-    expect(screen.getByText(/No budget is set yet/i)).toHaveTextContent('Edit budget')
-    expect(screen.getByRole('button', { name: 'Edit budget' })).toBeEnabled()
+    expect(
+      screen.getByText(t('budget.summary.emptyState', { action: t('budget.summary.edit') })),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t('budget.summary.edit') })).toBeEnabled()
     // The spend totals still mean something without a budget.
-    expect(screen.getByText('Total paid')).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.totalPaid'))).toBeInTheDocument()
   })
 
   it('opens the budget editor from a ghost trigger, leaving the accent to "Add expense"', async () => {
-    const { onEditBudget } = renderStrip()
-    const trigger = screen.getByRole('button', { name: 'Edit budget' })
+    const { onEditBudget, t } = renderStrip()
+    const trigger = screen.getByRole('button', { name: t('budget.summary.edit') })
 
     await userEvent.click(trigger)
 
@@ -144,72 +160,79 @@ describe('BudgetSummaryStrip', () => {
   })
 
   it('shows the planned budget itself, not just what is left of it', () => {
-    renderStrip({ summary: aSummary({ planned_budget: '100000.00' }) })
+    const { t } = renderStrip({ summary: aSummary({ planned_budget: '100000.00' }) })
 
     // The defect this replaced: the user could only infer their own budget by
     // adding the remainder to the forecast.
-    const planned = screen.getByText('Planned budget').nextElementSibling
-    expect(planned?.textContent).toMatch(/100[.,\s]?000[.,]00/)
+    const planned = screen.getByText(t('budget.field.plannedBudget')).nextElementSibling
+    expect(folded(planned?.textContent ?? '')).toBe(folded(formatMoney('100000.00', 'EUR', 'en')))
   })
 
   it('shows the targets the modal can edit, so none of them is write-only', () => {
-    renderStrip()
+    const { t } = renderStrip()
 
-    for (const label of ['Planned budget', 'Purchase price', 'Target sale price']) {
-      expect(screen.getByText(label)).toBeInTheDocument()
+    for (const key of ['budget.field.plannedBudget', 'budget.field.purchasePrice', 'budget.field.targetSalePrice'] as const) {
+      expect(screen.getByText(t(key))).toBeInTheDocument()
     }
   })
 
   it('separates the targets from the spend under their own headings', () => {
-    renderStrip()
+    const { t } = renderStrip()
 
-    expect(screen.getByText('Targets')).toBeInTheDocument()
-    expect(screen.getByText('Spend')).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.targetsHeading'))).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.spendHeading'))).toBeInTheDocument()
   })
 
   it('renders an unset target as a dash, never blank or "null"', () => {
-    renderStrip({
+    const { t } = renderStrip({
       summary: aSummary({ purchase_price: null, target_sale_price: null, projected_profit: null }),
     })
 
-    const purchase = screen.getByText('Purchase price').nextElementSibling
+    const purchase = screen.getByText(t('budget.field.purchasePrice')).nextElementSibling
     expect(purchase).toHaveTextContent('—')
     expect(purchase?.className).toContain('text-faint')
     expect(screen.queryByText('null')).not.toBeInTheDocument()
   })
 
   it('keeps a positive projected profit off the success colour', () => {
-    renderStrip({ summary: aSummary({ projected_profit: '78765.50' }) })
+    const { t } = renderStrip({ summary: aSummary({ projected_profit: '78765.50' }) })
 
     // The guide reserves status colours for status: "never use --success merely
     // because a thing is positive".
-    const profit = screen.getByText('Projected profit').nextElementSibling
+    const profit = screen.getByText(t('budget.summary.projectedProfit')).nextElementSibling
     expect(profit?.className).toContain('text-text')
     expect(profit?.className).not.toContain('text-success')
   })
 
   it('shows a loading line while the summary is still in flight', () => {
-    renderStrip({ summary: null, summaryLoading: true })
+    const { t } = renderStrip({ summary: null, summaryLoading: true })
 
-    expect(screen.getByText('Loading summary…')).toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.loadingSummary'))).toBeInTheDocument()
   })
 
   it('keeps showing the last figures while a refresh is in flight', () => {
-    renderStrip({ summaryLoading: true })
+    const { t } = renderStrip({ summaryLoading: true })
 
-    expect(screen.queryByText('Loading summary…')).not.toBeInTheDocument()
-    expect(screen.getByText('Total paid')).toBeInTheDocument()
+    expect(screen.queryByText(t('budget.summary.loadingSummary'))).not.toBeInTheDocument()
+    expect(screen.getByText(t('budget.summary.totalPaid'))).toBeInTheDocument()
   })
 
-  it('reports a failed summary without hiding the budget trigger', () => {
-    renderStrip({ summary: null, summaryError: 'Summary exploded' })
+  it('reports a network failure without hiding the budget trigger', () => {
+    const { t } = renderStrip({ summary: null, summaryError: 'network' })
 
-    expect(screen.getByText('Summary exploded')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit budget' })).toBeInTheDocument()
+    expect(screen.getByText(t('budget.error.network'))).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t('budget.summary.edit') })).toBeInTheDocument()
+  })
+
+  it('reports a server failure with different copy from a network failure', () => {
+    const { t } = renderStrip({ summary: null, summaryError: 'server' })
+
+    expect(screen.getByText(t('budget.error.server'))).toBeInTheDocument()
+    expect(screen.queryByText(t('budget.error.network'))).not.toBeInTheDocument()
   })
 
   it('disables the trigger while the budget itself is loading or failed', () => {
-    const { unmount } = render(
+    const { unmount, t } = renderWithLocale(
       <BudgetSummaryStrip
         summary={aSummary()}
         summaryLoading={false}
@@ -218,13 +241,58 @@ describe('BudgetSummaryStrip', () => {
         budgetError={null}
         onEditBudget={vi.fn()}
       />,
+      'en',
     )
-    expect(screen.getByRole('button', { name: 'Edit budget' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: t('budget.summary.edit') })).toBeDisabled()
     unmount()
 
-    renderStrip({ budgetError: 'Could not load the budget' })
+    const { t: t2 } = renderStrip({ budgetError: 'server' })
 
-    expect(screen.getByRole('button', { name: 'Edit budget' })).toBeDisabled()
-    expect(screen.getByText('Could not load the budget')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t2('budget.summary.edit') })).toBeDisabled()
+    expect(screen.getByText(t2('budget.error.server'))).toBeInTheDocument()
+  })
+
+  it('states an empty budget in Portuguese, with no English left in the strip', () => {
+    const { t } = renderStrip(
+      { summary: aSummary({ planned_budget: null, remaining_budget: null, budget_used_percent: null }) },
+      'pt-PT',
+    )
+
+    expect(
+      screen.getByText(t('budget.summary.emptyState', { action: t('budget.summary.edit') })),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: t('budget.summary.edit') })).toBeEnabled()
+    // No zero percentage or zero amount stands in for the missing figures.
+    expect(screen.queryByText(t('budget.summary.remaining'))).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(folded(t('budget.remaining.percentUsed', { percent: formatPercent(0, 'pt-PT') }))),
+    ).not.toBeInTheDocument()
+
+    const strip = screen.getByRole('region', { name: t('budget.summary.label') })
+    const englishOnly = new Set(
+      (Object.keys(en) as MessageKey[]).filter((key) => en[key] !== pt[key]).map((key): string => en[key]),
+    )
+    const walker = document.createTreeWalker(strip, NodeFilter.SHOW_TEXT)
+    const leftovers: string[] = []
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent?.trim()
+      if (text && englishOnly.has(text)) leftovers.push(text)
+    }
+    expect(leftovers).toEqual([])
+  })
+
+  it('formats the budget-used percentage per locale, via the catalogue', () => {
+    const { t } = renderStrip({ summary: aSummary({ budget_used_percent: 4.22 }) }, 'pt-PT')
+
+    expect(
+      screen.getByText(folded(t('budget.remaining.percentUsed', { percent: formatPercent(4.22, 'pt-PT') }))),
+    ).toBeInTheDocument()
+  })
+
+  it('formats money figures per locale, via useFormat', () => {
+    const { t } = renderStrip({ summary: aSummary({ total_paid: '1234.50' }) }, 'pt-PT')
+
+    const totalPaid = screen.getByText(t('budget.summary.totalPaid')).nextElementSibling
+    expect(folded(totalPaid?.textContent ?? '')).toBe(folded(formatMoney('1234.50', 'EUR', 'pt-PT')))
   })
 })

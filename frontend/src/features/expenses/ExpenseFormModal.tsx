@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Modal } from '../../components/Modal'
-import { ApiError, createExpense, updateExpense } from '../../api'
+import { createExpense, updateExpense } from '../../api'
+import { useTranslation } from '../../i18n'
+import { classifyFailure, type FailureKind } from '../../lib/apiFailure'
 import type { Expense } from '../../types'
 import { ExpenseForm } from './ExpenseForm'
 import type { ExpenseFormValues } from './formTypes'
@@ -21,8 +23,9 @@ export function ExpenseFormModal({
   onClose,
   onSaved,
 }: ExpenseFormModalProps) {
+  const { t } = useTranslation()
   const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<FailureKind | null>(null)
 
   async function handleSubmit(values: ExpenseFormValues): Promise<void> {
     if (editing) {
@@ -42,16 +45,16 @@ export function ExpenseFormModal({
         : await createExpense(toCreatePayload(values))
       onSaved(saved)
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : 'Could not save the expense.')
+      setSubmitError(classifyFailure(error))
       setSubmitting(false)
     }
   }
 
   return (
-    <Modal title={editing ? 'Edit expense' : 'Add expense'} onClose={onClose}>
+    <Modal title={editing ? t('expense.form.editTitle') : t('expenses.add')} onClose={onClose}>
       <ExpenseForm
         initialValues={initialValues}
-        submitLabel={editing ? 'Save changes' : 'Add expense'}
+        submitLabel={editing ? t('expense.form.saveChanges') : t('expenses.add')}
         submitting={submitting}
         submitError={submitError}
         onSubmit={(values) => void handleSubmit(values)}

@@ -43,8 +43,10 @@ Portuguese SHALL be European Portuguese: `pt-PT` orthography and vocabulary, not
 
 ### Requirement: The language choice persists and is user-controlled
 
-A control in the app shell SHALL let the user change language at any time. The
-choice SHALL be written to browser-local storage and SHALL be restored on the
+A control in the app shell SHALL let the user change language whenever no
+modal is open. A modal is a focused task: while one is open the page behind it
+is inert, and the control is reachable again once it closes. The choice SHALL
+be written to browser-local storage and SHALL be restored on the
 next visit. The preference is local to the browser; it is never sent to the
 backend and no endpoint is added to hold it.
 
@@ -53,10 +55,10 @@ backend and no endpoint is added to hold it.
 - **WHEN** they reload the app
 - **THEN** it renders in Portuguese without flashing English first
 
-#### Scenario: Switching does not disturb work in progress
+#### Scenario: A language change does not disturb work in progress
 - **GIVEN** the expense form is open with fields filled in and one field showing
   a validation error
-- **WHEN** the user switches language
+- **WHEN** the display language changes while the form is open
 - **THEN** the entered values are still there, the form is still open, and the
   validation error is now shown in the new language
 - **AND** no network request is made and the page does not reload
@@ -176,7 +178,7 @@ order can differ between languages.
 
 #### Scenario: Errors already on screen when the language changes
 - **GIVEN** validation errors are displayed
-- **WHEN** the user switches language
+- **WHEN** the display language changes
 - **THEN** the errors are re-rendered in the new language without re-submitting
   the form
 
