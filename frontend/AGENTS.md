@@ -33,6 +33,9 @@ in `backend/app/api/main.py`), so do not change the port without changing CORS.
 | `tailwind.config.js` | The design tokens as Tailwind classes. Mirrors the guide. |
 | `src/index.css` | The same tokens as CSS custom properties, plus base styles. |
 
+`make harness-check` fails when a directory under `src/` has no row here, or a
+row names a path that is gone — add the row in the same change as the directory.
+
 ## Commands
 
 Run from `frontend/`.
