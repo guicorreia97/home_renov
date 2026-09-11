@@ -82,8 +82,8 @@ export const pt: Record<MessageKey, string> = {
   'expense.category.permits_and_fees': 'Licenças e taxas',
   'expense.category.design_and_professional': 'Projeto e serviços técnicos',
   'expense.category.transport_and_delivery': 'Transporte e entrega',
-  'expense.category.waste_disposal': 'Remoção de resíduos',
-  'expense.category.utilities': 'Consumos',
+  'expense.category.waste_disposal': 'Remoção de entulho',
+  'expense.category.utilities': 'Água, gás e eletricidade',
   'expense.category.other': 'Outros',
 
   'expense.paymentMethod.cash': 'Numerário',
