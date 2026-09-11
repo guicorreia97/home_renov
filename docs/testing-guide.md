@@ -69,7 +69,7 @@ that renders a `Modal` throws. happy-dom implements `showModal`, `close` and
 `open`.
 
 Test files sit next to the code they cover as `<Component>.test.tsx`;
-`src/test/` holds the shared setup only.
+`src/test/` holds the shared setup and test helpers only.
 
 `src/test/setup.ts` registers the jest-dom matchers, cleans the DOM between
 tests, and stubs `fetch`. Stub the network, never the API client: `src/api/` is
@@ -77,7 +77,8 @@ the only module that calls `fetch`, so stubbing at that boundary leaves the
 client's own error normalising, abort handling and 204 case under test.
 
 ```tsx
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithLocale } from '../../test/renderWithLocale'
 import { stubApi } from '../../test/setup'
 
 it('shows the expense once loaded', async () => {
@@ -86,7 +87,7 @@ it('shows the expense once loaded', async () => {
     'GET /budget/summary': { body: summary },
   })
 
-  render(<ExpensesScreen />)
+  renderWithLocale(<ExpensesScreen />)
 
   expect(await screen.findByText('Kitchen worktop')).toBeInTheDocument()
 })
@@ -99,6 +100,50 @@ last one repeats. `apiCalls` records what was requested, and
 
 Query by what the user perceives — role, label, text — not by test ids or class
 names. Assert on rendered output rather than on component state.
+
+### Copy and languages
+
+The UI renders in English and European Portuguese (`pt-PT`) from one message
+catalogue. `src/i18n/messages.en.ts` is the source of truth and
+`messages.pt.ts` is typed `Record<MessageKey, string>` against it, so a key
+missing from either side fails the build, and a parity test backs that up if
+the annotation is ever weakened. Keys are flat and dotted
+(`'expenses.table.header.amount'`) so every use of a message is one grep away.
+
+**A test never hardcodes a user-visible string.** Rewording a message is not a
+behaviour change and must not fail the suite; a broken control still must. In
+order of preference:
+
+1. Role and accessible name — `getByRole('button', { name: t('expenses.add') })`.
+2. A catalogue lookup where the copy itself is the subject —
+   `getByText(t('expenses.table.empty'))`.
+3. A stable identifier, only where neither exists.
+
+Fixture data — a description, a payee — is test input rather than copy, and is
+asserted literally, as `'Kitchen worktop'` is above.
+
+Render through `renderWithLocale(ui, locale)` from `src/test/renderWithLocale.tsx`.
+It wraps the tree in a `LocaleProvider` at that locale (default `en`) and
+returns a `t` bound to it:
+
+```tsx
+const { t } = renderWithLocale(<ExpensesScreen />, 'pt-PT')
+
+expect(await screen.findByRole('heading', { name: t('expenses.title') })).toBeInTheDocument()
+```
+
+`useTranslation` and `useFormat` throw outside a provider, so a bare `render` of
+a component that uses them fails loudly instead of quietly falling back to
+English. Component tests run under one locale. The screen and its two modals
+also run under `pt-PT`, where number, date and percentage formatting and text
+length differ.
+
+Assert a formatted value through `src/lib/format.ts` or the catalogue, never
+against a hand-typed string, and wrap it in `folded` from the same helper
+module: Testing Library folds the non-breaking space Intl emits (`1250,50 €`)
+in rendered text, but not in the string you pass. The one exception is
+`src/lib/format.test.ts` itself, which pins what each locale's output looks
+like so every other test can trust the formatter rather than restate it.
 
 ## What not to do
 
