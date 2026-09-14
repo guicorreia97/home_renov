@@ -1,7 +1,9 @@
 # Proposal: The deal and property spine
 
-> **PART 2 of 8.** Stub — `design.md`, delta specs and `tasks.md` get written
-> when this is picked up. **Do this one first among PARTs 2–8**; see Sequencing.
+> **PART 2 of 8.** Fully planned: `design.md`, three delta specs and `tasks.md`
+> are written. **Do this one first among PARTs 2–8**; see Sequencing. The
+> `frontend-shell` delta assumes PART 1 has archived, since that change is the
+> capability's author.
 
 ## Why
 

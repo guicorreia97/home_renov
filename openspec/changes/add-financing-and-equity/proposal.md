@@ -1,7 +1,14 @@
 # Proposal: Financing and equity
 
-> **PART 7 of 8.** Stub — `design.md`, delta specs and `tasks.md` get written
-> when this is picked up. **Depends on PART 2.**
+> **PART 7 of 8.** Fully planned: `design.md`, three delta specs and `tasks.md`
+> are written. Assumes **PARTs 1 and 2 have archived** — PART 1
+> (`redesign-flip-desk-skin`) authors the `frontend-shell` capability and the
+> rule that every displayed total is derived server-side in `Decimal`; PART 2
+> (`add-deal-and-property`) provides the `deal_id` spine this attaches to.
+> **Not** independent of PART 6 (`add-acquisition-costs`): it adds its own term
+> to the same profit calculation, and the equity this change derives counts the
+> acquisition costs PART 6 records. Both modify PART 1's profitability
+> requirement, so whichever archives second must re-copy the then-current text.
 
 ## Why
 
@@ -34,11 +41,22 @@ it needs this PART.
 - **A derived schedule**, computed server-side in `Decimal`: monthly payment,
   interest and principal split per period, interest paid to date, principal
   amortised, and the balance outstanding at the target exit date.
-- **Interest enters profit; principal does not.** `projected_profit` gains a
-  finance-cost line and an exit-settlement line that are not the same number —
-  this is the correctness heart of the change.
+- **Interest enters profit; principal does not.** `projected_profit` gains
+  **exactly one** new line — the finance cost, which is interest plus fees. The
+  exit settlement is reported *beside* the profit sequence and never inside it:
+  subtracting the balance outstanding would charge the deal for repaying money
+  it never counted as income. Finance cost and debt service are two different
+  numbers and neither may stand in for the other — this is the correctness heart
+  of the change. The figures taken over the same cost base — the break-even sale
+  price and the two ratios — move with that term, the summary names the finance
+  cost it subtracted, and `projected_profit` becomes **absent** for a financed
+  deal with no target exit date, since the finance cost to exit is then
+  unknowable. (An earlier draft of this proposal said profit gains an
+  exit-settlement line too; that was wrong. See `design.md` Decision 7.)
 - **Equity derived, not entered**: down payment + acquisition costs (PART 6) +
-  works spend + debt service to date.
+  works paid + loan fees settled + debt service paid — reported both as invested
+  to date and as at exit, with its components named so what it contains is
+  visible.
 - **Frontend**: the financing card, the header's `Crédito @ rate`, the sidebar
   footer becoming real `CAPITAL PRÓPRIO`, and return-on-equity alongside
   return-on-cost.
@@ -48,8 +66,11 @@ it needs this PART.
 **New:** `financing` — the loan, its schedule, which parts of it are costs, and
 what equity means.
 
-**Modified:** `frontend-shell` (the sidebar footer), `frontend-expenses` (the
-waterfall gains finance cost and exit settlement).
+**Modified:** `budget-summary` (`projected_profit` subtracts the finance cost to
+exit and nothing else the loan produces, the summary names that cost, and the
+profit is absent where a financed deal has no exit date), `frontend-shell` (the
+sidebar footer), `frontend-expenses` (the waterfall gains finance cost and exit
+settlement).
 
 ## Impact
 
@@ -63,3 +84,10 @@ itself.
 
 The sidebar footer's `remaining_budget` stand-in, and the header's three-item
 assumptions strip, which gains its fourth.
+
+PART 1's `budget-summary` spec also defines `break_even_sale_price` as
+`purchase_price + total_forecast`, which a financed deal falsifies: break-even
+is the price at which the projected profit is zero, and that profit now carries
+the finance cost. The `budget-summary` delta amends that sentence rather than
+leaving two main specs to disagree — the same amendment `add-acquisition-costs`
+(PART 6) makes for its own term, and the two are additive.

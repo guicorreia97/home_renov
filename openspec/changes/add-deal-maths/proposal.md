@@ -1,8 +1,12 @@
 # Proposal: Deal maths — exit costs, thresholds and scenarios
 
-> **PART 8 of 8.** Stub — `design.md`, delta specs and `tasks.md` get written
-> when this is picked up. **Depends on PARTs 6 and 7** to be worth doing;
-> a sensitivity grid over an incomplete cost base is confidently wrong.
+> **PART 8 of 8.** Fully planned: `design.md`, two delta specs and `tasks.md`
+> are written. The deltas assume PARTs 1, 2, 6 and 7 have archived —
+> `redesign-flip-desk-skin` (the profit view and the derived summary figures),
+> `add-deal-and-property` (the `deal_id` spine), `add-acquisition-costs` and
+> `add-financing-and-equity` (the two halves of the cost base this one judges).
+> **Do it last.** A sensitivity grid over an incomplete cost base is
+> confidently wrong.
 
 ## Why
 
@@ -31,7 +35,10 @@ no grid.
 ## What Changes
 
 - **New `ExitCosts`** per deal: agent commission (rate or amount), capital-gains
-  treatment, staging and legal. Subtracted in `projected_profit`.
+  treatment, any early-repayment charge on the loan, staging and legal.
+  Subtracted in `projected_profit`. Settling the loan's outstanding balance is
+  **not** among them — that is PART 7's transfer, not a cost, and the spec says
+  so explicitly so it cannot be subtracted twice.
 - **A `Scenario` model** — a named set of assumptions (sale price, works case,
   overrun) that can be compared against the base case, replacing the mockup's
   transient props with something that persists.
@@ -46,7 +53,10 @@ no grid.
 **New:** `deal-maths` — exit costs, scenarios, thresholds, and what
 break-even and minimum margin mean.
 
-**Modified:** `frontend-expenses` (the Lucro tab's judgement layer).
+**Modified:** `budget-summary` (`projected_profit` subtracts the cost of selling,
+break-even is solved rather than added at the target price, and the profit the
+summary reports is the profit the deal's maths reports), `frontend-expenses`
+(the Lucro tab's judgement layer).
 
 ## Impact
 

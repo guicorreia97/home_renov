@@ -1,8 +1,11 @@
 # Proposal: Contractors
 
-> **PART 4 of 8.** Stub — `design.md`, delta specs and `tasks.md` get written
-> when this is picked up. **Depends on PART 2.** Independent of PARTs 3 and 5,
-> though it improves both.
+> **PART 4 of 8.** Fully planned: `design.md`, two delta specs and `tasks.md`
+> are written. Assumes **PARTs 1 and 2 have archived** — PART 2 for the
+> `deal_id` spine and the per-deal storage this migration runs after, PART 1 for
+> the per-status `CategoryTotal` shape the contractor rollup mirrors and the
+> ledger requirement this change modifies. Independent of PARTs 3 and 5, though
+> it improves both.
 
 ## Why
 
@@ -23,14 +26,20 @@ budget, contractors and timeline"). This is that.
 
 ## What Changes
 
-- **New `Contractor` model**: name, trade, contact details, notes. Belongs to a
-  deal — or is shared across deals, which is the one design question worth
-  settling before writing code, since a good contractor outlives a flip.
-- **`Expense.payee` becomes `contractor_id`**, with the free-text value
-  migrated to created contractors by exact-match dedupe, and an escape hatch for
-  one-off payees that should not become records.
-- **Routes**: CRUD under `/contractors` (or `/deals/{id}/contractors`), plus
-  spend-per-contractor rollups computed server-side.
+- **New `Contractor` model**: name, trade, contact details, notes, plus a kind
+  distinguishing a party awarded works from a party goods are bought from.
+  **Shared across deals**, not owned by one — a good contractor outlives a flip,
+  and a per-deal record would recreate the duplication this change exists to end
+  (`design.md` Decision 1, the one deliberate exception to PART 2's
+  `deal_id`-first repository rule).
+- **`Expense.payee` becomes `contractor_id`**, required, with the free-text
+  value migrated to created contractors by exact-match dedupe. The free-text
+  field is **removed rather than kept as a fallback**: two fields describing who
+  was paid have no answer when they disagree. The one-off payee it was meant to
+  protect is handled by the supplier kind instead (`design.md` Decisions 2–3).
+- **Routes**: CRUD under `/contractors` at the application level, a merge
+  operation for duplicates the migration deliberately leaves apart, and
+  spend-per-contractor rollups computed server-side into `BudgetSummary`.
 - **Frontend**: `payee` becomes a picker with create-on-the-fly rather than a
   bare text input; `EMPREITEIRO`/`FORNECEDOR` columns resolve real records.
 
@@ -43,10 +52,15 @@ free-text payees migrate.
 
 ## Impact
 
-Small backend: one model, one repository, one router. The migration is the
-delicate half — a dedupe that silently merges two different contractors with
-similar names is worse than leaving them apart. **Human review required** for
-the on-disk format change.
+One model, one repository, one router — plus a merge operation, a rollup added
+to the existing summary pass, and a required-field change that touches every
+test constructing an expense (7 backend files, 6 frontend ones). The migration
+is the delicate half — a dedupe that silently merges two different contractors
+with similar names is worse than leaving them apart, so it under-merges on
+purpose and ships the merge that fixes it. **Human review required** for the
+on-disk format change: unlike PART 2's file move, this migration rewrites
+records in place, so the rollback is a pre-upgrade copy of each deal's
+`expenses.json`.
 
 **Rule 4 applies with force here.** Contractor details are exactly the content
 `AGENTS.md` forbids logging: "Never log secrets, addresses, contractor details,
@@ -54,4 +68,7 @@ or any renovation note content — log IDs and counts instead."
 
 ## Deletes from PART 1
 
-Nothing. PART 1 renders `payee` as the string it is; this upgrades it in place.
+No panel and no decision. PART 1 renders `payee` as the string it is and this
+upgrades it in place — but the upgrade does edit PART 1's ledger requirement,
+which names "the payee" as a column, so that requirement is carried into this
+change's `frontend-expenses` delta and modified there.

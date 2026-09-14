@@ -14,9 +14,9 @@
 
 ### Requirement: Money never becomes a JavaScript number
 
-Amounts cross the wire as strings and stay strings for the whole of their life in
-the client. No code path applies `Number()`, `parseFloat`, or arithmetic to a
-`Money` value; formatting operates on the string.
+Amounts SHALL cross the wire as strings and stay strings for the whole of their
+life in the client. No code path SHALL apply `Number()`, `parseFloat`, or
+arithmetic to a `Money` value; formatting operates on the string.
 
 This extends to every figure the new views display. Group subtotals, grand
 totals, category shares, margin, return on cost and the break-even price are
