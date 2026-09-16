@@ -30,10 +30,23 @@ class Budget(BaseModel):
 
 
 class CategoryTotal(BaseModel):
-    """Committed spend for one category."""
+    """Spend for one category, split by status.
+
+    `amount` keeps its original meaning — committed spend, paid plus pending,
+    excluding planned — so the breakdown arriving beside it changes nothing for
+    an existing consumer. A category holding only planned spend reports `0.00`
+    there rather than being left out, so the per-category figures reconcile with
+    the grand totals.
+    """
 
     category: ExpenseCategory
-    amount: Money
+    amount: Money = Field(description="Committed spend: paid plus pending, excluding planned.")
+    planned: Money = Field(description="Estimates not yet committed.")
+    pending: Money = Field(description="Invoiced but not yet paid.")
+    paid: Money
+    share: float = Field(
+        description="Percentage of all committed spend; 0 when nothing is committed anywhere."
+    )
 
 
 class BudgetSummary(BaseModel):
@@ -59,6 +72,24 @@ class BudgetSummary(BaseModel):
     projected_profit: SignedMoney | None = Field(
         default=None,
         description="target_sale_price minus purchase_price minus total_forecast.",
+    )
+    margin_percent: float | None = Field(
+        default=None,
+        description="projected_profit over target_sale_price; None when either is unset.",
+    )
+    return_on_cost_percent: float | None = Field(
+        default=None,
+        description=(
+            "projected_profit over purchase_price plus total_forecast; "
+            "None without a profit or against a zero cost base."
+        ),
+    )
+    break_even_sale_price: Money | None = Field(
+        default=None,
+        description=(
+            "purchase_price plus total_forecast — the sale price at which profit "
+            "is zero. None without a purchase price; it does not need a target."
+        ),
     )
 
     expense_count: int

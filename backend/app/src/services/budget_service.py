@@ -44,6 +44,9 @@ class BudgetService:
         total_committed = total_paid + total_pending
         total_forecast = total_committed + total_planned
 
+        projected_profit = self._projected_profit(budget, total_forecast)
+        cost_base = (budget.purchase_price or ZERO) + total_forecast
+
         summary = BudgetSummary(
             currency=self._currency,
             target_sale_price=budget.target_sale_price,
@@ -57,7 +60,10 @@ class BudgetService:
             budget_used_percent=self._used_percent(budget.planned_budget, total_forecast),
             over_budget=budget.planned_budget is not None
             and total_forecast > budget.planned_budget,
-            projected_profit=self._projected_profit(budget, total_forecast),
+            projected_profit=projected_profit,
+            margin_percent=self._ratio(projected_profit, budget.target_sale_price),
+            return_on_cost_percent=self._ratio(projected_profit, cost_base),
+            break_even_sale_price=self._break_even(budget.purchase_price, total_forecast),
             expense_count=len(expenses),
             by_category=self._by_category(expenses),
         )
@@ -95,14 +101,60 @@ class BudgetService:
         return budget.target_sale_price - purchase_price - total_forecast
 
     @staticmethod
+    def _ratio(numerator: Decimal | None, denominator: Decimal | None) -> float | None:
+        """A percentage, or None when it would be meaningless.
+
+        None rather than 0 whenever an input is unset or the denominator is
+        zero, matching projected_profit: a zero here would read as a real
+        answer — a deal with no margin — rather than as a missing one.
+        """
+        if numerator is None or denominator is None or denominator == ZERO:
+            return None
+        return round(float(numerator / denominator) * 100, 2)
+
+    @staticmethod
+    def _break_even(purchase_price: Decimal | None, total_forecast: Decimal) -> Decimal | None:
+        """The sale price at which the deal breaks even.
+
+        Independent of the target sale price, so it is reported even when no
+        target is set. None without a purchase price, since the figure would
+        then silently describe the renovation alone rather than the deal.
+        """
+        if purchase_price is None:
+            return None
+        return purchase_price + total_forecast
+
+    @staticmethod
     def _by_category(expenses: list[Expense]) -> list[CategoryTotal]:
-        totals: dict[ExpenseCategory, Decimal] = defaultdict(lambda: ZERO)
+        """Per-category spend, split by status.
+
+        A category appears when it holds any expense at all, a planned-only one
+        included, so that summing the per-category figures reproduces the grand
+        totals. `amount` remains committed-only, so a planned-only category
+        reports `0.00` there rather than vanishing from the list as it did
+        before the breakdown existed.
+        """
+        totals: dict[ExpenseCategory, dict[ExpenseStatus, Decimal]] = defaultdict(
+            lambda: dict.fromkeys(ExpenseStatus, ZERO)
+        )
         for expense in expenses:
-            if expense.status is not ExpenseStatus.PLANNED:
-                totals[expense.category] += expense.amount
+            totals[expense.category][expense.status] += expense.amount
+
+        committed = {
+            category: rows[ExpenseStatus.PAID] + rows[ExpenseStatus.PENDING]
+            for category, rows in totals.items()
+        }
+        total_committed = sum(committed.values(), start=ZERO)
 
         return [
-            CategoryTotal(category=category, amount=totals[category])
+            CategoryTotal(
+                category=category,
+                amount=committed[category],
+                planned=totals[category][ExpenseStatus.PLANNED],
+                pending=totals[category][ExpenseStatus.PENDING],
+                paid=totals[category][ExpenseStatus.PAID],
+                share=BudgetService._ratio(committed[category], total_committed) or 0.0,
+            )
             for category in ExpenseCategory
             if category in totals
         ]

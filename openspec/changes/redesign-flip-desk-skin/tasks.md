@@ -35,23 +35,23 @@ Branch with `make branch NAME=feat/<slug>`. Every commit carries
 
 ## 2. `feat/summary-derived-totals` — the figures, server-side
 
-- [ ] 2.1 Extend `CategoryTotal` in `backend/app/src/models/budget.py` with
+- [x] 2.1 Extend `CategoryTotal` in `backend/app/src/models/budget.py` with
       `planned`, `pending`, `paid` and `share`; verify the existing `amount`
       keeps its committed-only meaning
-- [ ] 2.2 Compute the breakdown in `budget_service.py`; verify a pytest asserts
+- [x] 2.2 Compute the breakdown in `budget_service.py`; verify a pytest asserts
       per-category `planned + pending + paid` sums to `total_forecast` **with a
       planned expense present** — the case that catches `by_category`'s
       exclusion of PLANNED
-- [ ] 2.3 Add `share` of committed spend; verify a category with no committed
+- [x] 2.3 Add `share` of committed spend; verify a category with no committed
       spend reports `0` rather than dividing by zero
-- [ ] 2.4 Add `margin_percent`, `return_on_cost_percent` and
+- [x] 2.4 Add `margin_percent`, `return_on_cost_percent` and
       `break_even_sale_price` to `BudgetSummary`; verify each is `None` — never
       `0` — when its inputs are unset, matching `projected_profit`
-- [ ] 2.5 Verify ratios are returned as numbers and money as decimal strings, so
+- [x] 2.5 Verify ratios are returned as numbers and money as decimal strings, so
       no formatter can render a percentage as currency
-- [ ] 2.6 Verify a pytest covers `GET /budget/summary` returning every new field
+- [x] 2.6 Verify a pytest covers `GET /budget/summary` returning every new field
       (rule 5: every endpoint has a test)
-- [ ] 2.7 Mirror the new fields into `frontend/src/types/budget.ts`; verify
+- [x] 2.7 Mirror the new fields into `frontend/src/types/budget.ts`; verify
       ratios are typed `number | null` and money `Money | null`
 
 ## 3. `feat/flip-desk-shell` — sidebar, header, tabs

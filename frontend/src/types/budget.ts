@@ -22,10 +22,25 @@ export interface BudgetUpdate {
   planned_budget?: Money | null
 }
 
-/** Committed spend for one category. */
+/**
+ * Spend for one category, split by status.
+ *
+ * `amount` is committed spend — paid plus pending, excluding planned — and keeps
+ * that meaning now the breakdown sits beside it. A category holding only planned
+ * spend appears with `amount` of `"0.00"` rather than being left out, so these
+ * rows reconcile with the grand totals above them.
+ */
 export interface CategoryTotal {
   category: ExpenseCategory
+  /** Committed spend: paid plus pending, excluding planned. */
   amount: Money
+  /** Estimates not yet committed. */
+  planned: Money
+  /** Invoiced but not yet paid. */
+  pending: Money
+  paid: Money
+  /** Percentage of all committed spend — a number, not a Money string. */
+  share: number
 }
 
 /**
@@ -58,6 +73,15 @@ export interface BudgetSummary {
 
   /** target_sale_price minus purchase_price minus total_forecast. */
   projected_profit: SignedMoney | null
+  /** projected_profit over target_sale_price. A ratio, so a number. */
+  margin_percent: number | null
+  /** projected_profit over purchase_price plus total_forecast. A ratio. */
+  return_on_cost_percent: number | null
+  /**
+   * purchase_price plus total_forecast — the sale price at which profit is zero.
+   * Reported even with no target sale price; null without a purchase price.
+   */
+  break_even_sale_price: Money | null
 
   expense_count: number
   by_category: CategoryTotal[]

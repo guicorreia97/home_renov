@@ -68,4 +68,56 @@ def test_get_budget_summary_reflects_created_expenses(client: TestClient) -> Non
     assert body["total_paid"] == "1250.00"
     assert body["expense_count"] == 1
     assert body["over_budget"] is True
-    assert body["by_category"] == [{"category": "materials", "amount": "1250.00"}]
+    assert body["by_category"] == [
+        {
+            "category": "materials",
+            "amount": "1250.00",
+            "planned": "0.00",
+            "pending": "0.00",
+            "paid": "1250.00",
+            "share": 100.0,
+        }
+    ]
+
+
+def test_get_budget_summary_returns_the_derived_profitability_figures(
+    client: TestClient,
+) -> None:
+    client.put("/budget", json={"purchase_price": "300000.00", "target_sale_price": "465000.00"})
+    client.post("/expenses", json={**VALID_EXPENSE, "amount": "120000.00"})
+
+    response = client.get("/budget/summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["projected_profit"] == "45000.00"
+    assert body["break_even_sale_price"] == "420000.00"
+    assert body["margin_percent"] == 9.68
+    assert body["return_on_cost_percent"] == 10.71
+
+
+def test_get_budget_summary_sends_money_as_strings_and_ratios_as_numbers(
+    client: TestClient,
+) -> None:
+    client.put("/budget", json={"purchase_price": "300000.00", "target_sale_price": "465000.00"})
+    client.post("/expenses", json={**VALID_EXPENSE, "amount": "120000.00"})
+
+    body = client.get("/budget/summary").json()
+
+    assert isinstance(body["break_even_sale_price"], str)
+    assert isinstance(body["by_category"][0]["paid"], str)
+    assert isinstance(body["margin_percent"], float)
+    assert isinstance(body["return_on_cost_percent"], float)
+    assert isinstance(body["by_category"][0]["share"], float)
+
+
+def test_get_budget_summary_omits_profitability_figures_without_targets(
+    client: TestClient,
+) -> None:
+    client.post("/expenses", json=VALID_EXPENSE)
+
+    body = client.get("/budget/summary").json()
+
+    assert body["margin_percent"] is None
+    assert body["return_on_cost_percent"] is None
+    assert body["break_even_sale_price"] is None
