@@ -40,7 +40,7 @@ export function RemainingConclusionBlock({ conclusion }: { conclusion: Remaining
           </p>
         )}
       </div>
-      <p className={`mt-1 text-numeric tabular ${toneTextClass[conclusion.tone]}`}>
+      <p className={`mt-1 text-numeric font-mono tabular ${toneTextClass[conclusion.tone]}`}>
         {conclusion.amount}
       </p>
       <div

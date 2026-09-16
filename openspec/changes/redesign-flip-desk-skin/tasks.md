@@ -9,27 +9,27 @@ Branch with `make branch NAME=feat/<slug>`. Every commit carries
 
 ## 1. `feat/flip-desk-tokens` — retokenise
 
-- [ ] 1.1 Rewrite the palette, typography, spacing and shape sections of
+- [x] 1.1 Rewrite the palette, typography, spacing and shape sections of
       `docs/design-system-guide.md` to the values in `design.md` Decisions 1, 2,
       3 and 7 — the guide changes **first**, code mirrors it
-- [ ] 1.2 Record the two deviations in the guide with their reasons: the 11px
+- [x] 1.2 Record the two deviations in the guide with their reasons: the 11px
       floor for uppercase mono micro-labels only, and the monochrome category
       ramp; verify the 4.5:1 contrast rule and the 40px target rule are stated
       as **unchanged**
-- [ ] 1.3 Check every new token pair with a contrast checker; verify each clears
+- [x] 1.3 Check every new token pair with a contrast checker; verify each clears
       4.5:1 and adjust the alpha — not the rule — if one does not
-- [ ] 1.4 Swap the custom-property values in `frontend/src/index.css`; verify the
+- [x] 1.4 Swap the custom-property values in `frontend/src/index.css`; verify the
       `-soft` tokens that become real alpha no longer carry the comment
       explaining why they were precomputed blends
-- [ ] 1.5 Update `frontend/tailwind.config.js`: `fontFamily.sans`, new
+- [x] 1.5 Update `frontend/tailwind.config.js`: `fontFamily.sans`, new
       `fontFamily.mono`, retuned `fontSize` roles, radii 12→10 and 8→7; verify
       the spacing scale is untouched
-- [ ] 1.6 Swap the font `<link>` in `frontend/index.html`; verify no npm
+- [x] 1.6 Swap the font `<link>` in `frontend/index.html`; verify no npm
       dependency was added
-- [ ] 1.7 Apply `font-mono` to figures in `BudgetSummaryStrip.tsx`,
+- [x] 1.7 Apply `font-mono` to figures in `BudgetSummaryStrip.tsx`,
       `ExpenseRow.tsx` and `RemainingBudgetConclusion.tsx`; verify tabular
       alignment still holds in the table
-- [ ] 1.8 Run the frontend suite **without editing a single test**; verify it
+- [x] 1.8 Run the frontend suite **without editing a single test**; verify it
       passes. A failure here means something is coupled to a token value —
       report it rather than fixing the test
 

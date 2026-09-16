@@ -49,7 +49,7 @@ function FigureRow({ figures }: { figures: Figure[] }) {
         <div key={figure.label}>
           <dt className="text-label text-muted">{figure.label}</dt>
           <dd
-            className={`mt-1 text-numeric tabular ${
+            className={`mt-1 text-numeric font-mono tabular ${
               figure.value === '—'
                 ? 'text-faint'
                 : figure.tone
@@ -168,7 +168,7 @@ export function BudgetSummaryStrip({
         {summary && (
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-table-head text-muted uppercase">{t('budget.summary.targetsHeading')}</p>
+              <p className="text-micro font-mono text-muted uppercase">{t('budget.summary.targetsHeading')}</p>
               <div className="mt-2">
                 <FigureRow figures={buildTargetFigures(summary, formatMoney, t)} />
               </div>
@@ -180,7 +180,7 @@ export function BudgetSummaryStrip({
             </div>
 
             <div className="border-t border-border pt-4">
-              <p className="text-table-head text-muted uppercase">{t('budget.summary.spendHeading')}</p>
+              <p className="text-micro font-mono text-muted uppercase">{t('budget.summary.spendHeading')}</p>
               <div className="mt-2">
                 <FigureRow figures={buildSpendFigures(summary, formatMoney, t)} />
               </div>
