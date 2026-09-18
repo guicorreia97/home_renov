@@ -130,4 +130,21 @@ export const pt: Record<MessageKey, string> = {
   'budget.error.notANumber':
     'O campo «{field}» deve ser um número não negativo, com ponto decimal, por exemplo 45000 ou 45000.50.',
   'budget.error.tooLarge': 'O valor de «{field}» é demasiado elevado.',
+
+  // --- shell.* — the app shell: sidebar, header, tabs -------------------------
+  'shell.sidebar.categoriesHeading': 'Categorias',
+  'shell.sidebar.clearFilter': 'Limpar filtro',
+  'shell.sidebar.loading': 'A carregar categorias…',
+  'shell.sidebar.empty': 'Ainda não há gastos registados.',
+  'shell.sidebar.footer.noBudget':
+    'Ainda não há orçamento definido. Defina um para acompanhar o que resta.',
+  'shell.header.assumptionUnset': 'Não definido',
+  'shell.header.overBudgetPill': 'Acima do orçamento',
+  'shell.header.withinBudgetPill': 'Dentro do orçamento',
+  'shell.header.editTargets': 'Editar objetivos',
+  'shell.tabs.label': 'Vistas',
+  'shell.tab.budget': 'Orçamento da obra',
+  'shell.tab.ledger': 'Livro de despesas',
+  'shell.tab.profit': 'Projeção de lucro',
+  'shell.panel.notAvailable': 'Esta vista ainda não está disponível.',
 }

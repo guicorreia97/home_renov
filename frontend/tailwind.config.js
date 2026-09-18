@@ -114,6 +114,11 @@ export default {
       minWidth: {
         field: '160px',
       },
+      // Fixed app-shell sidebar width — not a min/max, an exact structural
+      // constant, so it lives under `width` rather than `minWidth`.
+      width: {
+        sidebar: '258px',
+      },
       // Dark UIs separate layers with surface lightness, not shadow. The single
       // allowed shadow is reserved for genuinely floating elements.
       boxShadow: {

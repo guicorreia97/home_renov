@@ -56,23 +56,23 @@ Branch with `make branch NAME=feat/<slug>`. Every commit carries
 
 ## 3. `feat/flip-desk-shell` — sidebar, header, tabs
 
-- [ ] 3.1 Create `frontend/src/features/shell/` with `AppShell`; render it from
+- [x] 3.1 Create `frontend/src/features/shell/` with `AppShell`; render it from
       `App.tsx`; verify the healthcheck gate is unchanged and a failed
       healthcheck still draws no shell
-- [ ] 3.2 Build `Sidebar` with the category rail from the summary; verify a test
+- [x] 3.2 Build `Sidebar` with the category rail from the summary; verify a test
       asserts selecting a row sets the **existing** `filters.category` state and
       that no second filter mechanism was introduced
-- [ ] 3.3 Label the rail for categories, not phases; verify no string in the
+- [x] 3.3 Label the rail for categories, not phases; verify no string in the
       shell names a works phase
-- [ ] 3.4 Add the sidebar footer — remaining budget and percent used on the
+- [x] 3.4 Add the sidebar footer — remaining budget and percent used on the
       documented thresholds; verify the no-budget case states its emptiness and
       offers the action that sets one
-- [ ] 3.5 Build `DeskHeader` with the three assumptions, the over-budget pill
+- [x] 3.5 Build `DeskHeader` with the three assumptions, the over-budget pill
       and the two actions wired to the **existing** `BudgetSettingsModal` and
       `ExpenseFormModal`; verify an unset assumption never renders as zero
-- [ ] 3.6 Build `TabNav`; verify the active tab is exposed as selected to
+- [x] 3.6 Build `TabNav`; verify the active tab is exposed as selected to
       assistive technology and that the category filter survives a tab switch
-- [ ] 3.7 Verify both locales render the shell without clipping at 1280px —
+- [x] 3.7 Verify both locales render the shell without clipping at 1280px —
       Portuguese runs 20–30% longer and the sidebar takes a fixed 258px
 
 ## 4. `feat/flip-desk-panels` — the three views

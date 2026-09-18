@@ -7,7 +7,8 @@
  * missing from the other a compile error (see design.md, decision 2).
  *
  * Flat dotted keys, not nested objects — an orphaned key is one `grep` away.
- * See design.md, decision 3. Namespaces: `app.*` (the shell), `expenses.*`
+ * See design.md, decision 3. Namespaces: `app.*` (the health-check gate and
+ * top bar), `shell.*` (the app shell: sidebar, header, tabs), `expenses.*`
  * (the screen, table, filters), `expense.*` (one expense: its form, its
  * enum labels, its delete dialog, its validation), `budget.*` (the summary
  * strip, the settings modal, its validation).
@@ -139,6 +140,22 @@ export const en = {
   'budget.error.server': 'The API returned an unexpected error.',
   'budget.error.notANumber': '{field} must be a non-negative number, e.g. 45000 or 45000.50.',
   'budget.error.tooLarge': '{field} is too large.',
+
+  // --- shell.* — the app shell: sidebar, header, tabs -----------------------
+  'shell.sidebar.categoriesHeading': 'Categories',
+  'shell.sidebar.clearFilter': 'Clear filter',
+  'shell.sidebar.loading': 'Loading categories…',
+  'shell.sidebar.empty': 'No spend recorded yet.',
+  'shell.sidebar.footer.noBudget': 'No budget is set yet. Set one to track what remains.',
+  'shell.header.assumptionUnset': 'Not set',
+  'shell.header.overBudgetPill': 'Over budget',
+  'shell.header.withinBudgetPill': 'Within budget',
+  'shell.header.editTargets': 'Edit targets',
+  'shell.tabs.label': 'Views',
+  'shell.tab.budget': 'Works budget',
+  'shell.tab.ledger': 'Expense ledger',
+  'shell.tab.profit': 'Profit projection',
+  'shell.panel.notAvailable': 'This view is not available yet.',
 } as const
 
 export type MessageKey = keyof typeof en

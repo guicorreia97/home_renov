@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getHealth } from './api'
 import { AppHeader } from './AppHeader'
-import ExpensesScreen from './features/expenses/ExpensesScreen'
+import { AppShell } from './features/shell/AppShell'
 import { useTranslation } from './i18n'
 import { classifyFailure, type FailureKind } from './lib/apiFailure'
 
@@ -42,38 +42,49 @@ export default function App() {
   const [hintBefore, hintAfter] = t('app.connection.startHint').split('{command}')
 
   return (
-    <div className="min-h-screen bg-bg text-text">
+    <div className="flex h-screen flex-col overflow-hidden bg-bg text-text">
       <AppHeader />
 
       {connection.state === 'checking' && (
-        <main className="mx-auto max-w-content px-6 py-12">
-          <p className="text-body text-muted">{t('app.connection.checking')}</p>
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-content px-6 py-12">
+            <p className="text-body text-muted">{t('app.connection.checking')}</p>
+          </div>
         </main>
       )}
 
       {connection.state === 'failed' && (
-        <main className="mx-auto max-w-content px-6 py-12">
-          <section className="rounded-card border border-border bg-surface p-6">
-            <h1 className="text-card-title text-text">{t('app.connection.title')}</h1>
-            <p className="mt-2 text-body text-danger">
-              {t(
-                connection.kind === 'network'
-                  ? 'app.connection.failed.network'
-                  : 'app.connection.failed.server',
-              )}
-            </p>
-            {connection.kind === 'network' && (
-              <p className="mt-2 text-label text-muted">
-                {hintBefore}
-                <code className="text-text">make run</code>
-                {hintAfter}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-content px-6 py-12">
+            <section className="rounded-card border border-border bg-surface p-6">
+              <h1 className="text-card-title text-text">{t('app.connection.title')}</h1>
+              <p className="mt-2 text-body text-danger">
+                {t(
+                  connection.kind === 'network'
+                    ? 'app.connection.failed.network'
+                    : 'app.connection.failed.server',
+                )}
               </p>
-            )}
-          </section>
+              {connection.kind === 'network' && (
+                <p className="mt-2 text-label text-muted">
+                  {hintBefore}
+                  <code className="text-text">make run</code>
+                  {hintAfter}
+                </p>
+              )}
+            </section>
+          </div>
         </main>
       )}
 
-      {connection.state === 'connected' && <ExpensesScreen />}
+      {/* The healthcheck gate is unchanged: the shell mounts only once the API
+          has proven reachable, so a broken base URL still surfaces as the
+          message above rather than as a half-drawn desk. */}
+      {connection.state === 'connected' && (
+        <div className="flex-1 overflow-hidden">
+          <AppShell />
+        </div>
+      )}
     </div>
   )
 }

@@ -78,6 +78,22 @@ This is a deliberate departure from the source mockup, which assigns seven hues.
 Revisit only when a user names and colours something themselves — at that point
 the colour is identity a person assigned, not decoration the app invented.
 
+**The ramp.** Categories are ranked by share of spend, largest first, and the
+rank picks the opacity below — rank 0 gets full opacity, every rank past the
+last step repeats it, so the ramp never runs out on a long category list:
+
+| Rank | Opacity |
+|---|---|
+| 0 | `1` |
+| 1 | `0.8` |
+| 2 | `0.62` |
+| 3 | `0.46` |
+| 4 | `0.32` |
+| 5 and beyond | `0.2` |
+
+This is a plain numeric CSS `opacity` applied to the single `bg-accent` token —
+not a new colour, so it never needs its own custom property.
+
 ## Typography
 
 **Space Grotesk** (`'Space Grotesk'`, `system-ui`, `sans-serif`) for prose and
@@ -141,6 +157,7 @@ under `theme.extend` in `tailwind.config.js`.
 | `max-w-modal` | 480px | Modal panel width. |
 | `max-h-modal` | 85vh | Modal panel max height before its body scrolls. |
 | `min-w-field` | 160px | Minimum width for an inline filter/select. |
+| `w-sidebar` | 258px | Fixed width of the app shell's sidebar. |
 
 ## Text expansion
 
