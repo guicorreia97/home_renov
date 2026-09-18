@@ -13,37 +13,39 @@
 
 @layer base {
   :root {
-    /* Ground and surfaces — warm neutrals, never blue-grey. */
-    --bg: #14110f;
-    --surface: #1e1a17;
-    --surface-raised: #292320;
-    --border: #3a322e;
+    /* Ground and surfaces — near-black neutrals. */
+    --bg: #0c0d0c;
+    --surface: #131513;
+    --surface-raised: #1a1c1a;
+    --border: rgba(255, 255, 255, 0.07);
 
-    /* Text. --text is a warm off-white, deliberately not pure #FFF. */
-    --text: #f2ede8;
-    --text-muted: #a79b92;
-    --text-faint: #6e635c;
+    /* Text. --text is an off-white, deliberately not pure #FFF. The muted steps
+       are alpha over the ground; .55 is the lowest that clears 4.5:1. */
+    --text: #e8eae7;
+    --text-muted: rgba(232, 234, 231, 0.72);
+    --text-faint: rgba(232, 234, 231, 0.55);
 
-    /* One terracotta accent does all the work. It appears once per view as the
+    /* One mint accent does all the work. It appears once per view as the
        primary action — three accent buttons on a screen means no primary. */
-    --accent: #d97843;
-    --accent-hover: #e68a55;
-    --accent-soft: #3a241a;
+    --accent: #4fd39a;
+    --accent-hover: #6ee0af;
+    --accent-soft: rgba(79, 211, 154, 0.11);
 
-    /* Status only. Never used decoratively. */
-    --success: #6ba368;
-    --warning: #d9a441;
-    --danger: #c25b4e;
+    /* Status only. Never used decoratively. --success is the same mint as the
+       accent: on a figure it reports status, on a control it offers an action.
+       See "The accent is also the success colour" in the guide. */
+    --success: #4fd39a;
+    --warning: #e0a34a;
+    --danger: #e06a5a;
 
     /* Backdrop behind a modal. */
-    --overlay: rgba(20, 17, 15, 0.8);
+    --overlay: rgba(12, 13, 12, 0.8);
 
-    /* Status colors blended ~15% over --surface, for badge fills. Tailwind's
-       opacity modifier needs an alpha-capable color format; these are plain
-       hex, so the tint is precomputed instead — same pattern as --accent-soft. */
-    --success-soft: #2a2f23;
-    --warning-soft: #3a2f1d;
-    --danger-soft: #37241f;
+    /* Badge fills. The palette carries alpha now, so these are real
+       translucency and composite over whatever surface is beneath them. */
+    --success-soft: rgba(79, 211, 154, 0.11);
+    --warning-soft: rgba(224, 163, 74, 0.07);
+    --danger-soft: rgba(224, 106, 90, 0.11);
 
     /* Dark is the only theme in v1; this keeps form controls and scrollbars
        from rendering in the browser's light defaults. */
@@ -58,9 +60,9 @@
     margin: 0;
     background-color: var(--bg);
     color: var(--text);
-    font-family: Inter, system-ui, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
