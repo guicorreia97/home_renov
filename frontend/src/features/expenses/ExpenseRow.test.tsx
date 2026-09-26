@@ -87,6 +87,30 @@ describe('ExpenseRow', () => {
     }
   })
 
+  // 4.5 — an expense with no invoice_reference renders an explicit
+  // placeholder, not a blank cell that reads as a rendering fault.
+  it('renders an explicit placeholder when there is no document reference, never a blank cell', () => {
+    const { t } = renderRow(anExpense({ invoice_reference: null }))
+
+    const cell = screen.getByText(t('expenses.table.noInvoiceReference'))
+    expect(cell).toBeInTheDocument()
+    expect(cell.closest('td')?.textContent?.trim()).not.toBe('')
+  })
+
+  it('renders the actual reference when one is set, not the placeholder', () => {
+    const { t } = renderRow(anExpense({ invoice_reference: 'INV-42' }))
+
+    expect(screen.getByText('INV-42')).toBeInTheDocument()
+    expect(screen.queryByText(t('expenses.table.noInvoiceReference'))).not.toBeInTheDocument()
+  })
+
+  it('shows how the expense was paid and its document reference among the cells', () => {
+    renderRow(anExpense({ payment_method: 'credit_card', invoice_reference: 'INV-42' }))
+
+    expect(screen.getByText('Credit card')).toBeInTheDocument()
+    expect(screen.getByText('INV-42')).toBeInTheDocument()
+  })
+
   it('renders in Portuguese, including the accessible action names', () => {
     const { t } = renderRow(anExpense(), 'EUR', 'pt-PT')
 

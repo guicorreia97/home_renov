@@ -40,6 +40,8 @@ export const pt: Record<MessageKey, string> = {
   'expenses.filter.allCategories': 'Todas as categorias',
   'expenses.error.network': 'Não foi possível contactar a API.',
   'expenses.error.server': 'A API devolveu um erro inesperado.',
+  'expenses.table.header.invoiceReference': 'Referência do documento',
+  'expenses.table.noInvoiceReference': 'Sem referência',
 
   // --- expense.* — one expense: form, delete dialog, validation --------------
   'expense.field.description': 'Descrição',
@@ -114,6 +116,8 @@ export const pt: Record<MessageKey, string> = {
   'budget.summary.expensesRecorded': 'Despesas registadas',
   'budget.summary.totalPaid': 'Total pago',
   'budget.summary.totalCommitted': 'Total comprometido',
+  'budget.summary.totalPlanned': 'Total planeado',
+  'budget.summary.totalPending': 'Total pendente',
   'budget.summary.totalForecast': 'Total previsto',
   'budget.summary.projectedProfit': 'Lucro estimado',
   'budget.summary.remaining': 'Orçamento restante',
@@ -130,4 +134,36 @@ export const pt: Record<MessageKey, string> = {
   'budget.error.notANumber':
     'O campo «{field}» deve ser um número não negativo, com ponto decimal, por exemplo 45000 ou 45000.50.',
   'budget.error.tooLarge': 'O valor de «{field}» é demasiado elevado.',
+
+  // --- shell.* — the app shell: sidebar, header, tabs -------------------------
+  'shell.sidebar.categoriesHeading': 'Categorias',
+  'shell.sidebar.clearFilter': 'Limpar filtro',
+  'shell.sidebar.loading': 'A carregar categorias…',
+  'shell.sidebar.empty': 'Ainda não há gastos registados.',
+  'shell.sidebar.footer.noBudget':
+    'Ainda não há orçamento definido. Defina um para acompanhar o que resta.',
+  'shell.header.assumptionUnset': 'Não definido',
+  'shell.header.overBudgetPill': 'Acima do orçamento',
+  'shell.header.withinBudgetPill': 'Dentro do orçamento',
+  'shell.header.editTargets': 'Editar objetivos',
+  'shell.tabs.label': 'Vistas',
+  'shell.tab.budget': 'Orçamento da obra',
+  'shell.tab.ledger': 'Livro de despesas',
+  'shell.tab.profit': 'Projeção de lucro',
+
+  // --- budget.view.* — the works budget tab: category breakdown -------------
+  'budget.view.overrunMessage':
+    'A despesa prevista de {forecast} ultrapassou o orçamento planeado de {planned}.',
+  'budget.view.columnCommitted': 'Comprometido',
+  'budget.view.empty':
+    'Ainda não há despesas registadas. Adicione a primeira para ver o orçamento da obra dividido por categoria.',
+  'budget.view.emptyFiltered': 'Nenhuma despesa corresponde à categoria selecionada.',
+
+  // --- budget.profit.* — the profit projection tab ---------------------------
+  'budget.profit.margin': 'Margem',
+  'budget.profit.returnOnCost': 'Retorno sobre o custo',
+  'budget.profit.breakEven': 'Preço de venda de equilíbrio',
+  'budget.profit.noTarget':
+    'Ainda não foi definido um preço de venda pretendido. Defina um para ver o lucro estimado.',
+  'budget.profit.less': 'Menos: {label}',
 }

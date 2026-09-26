@@ -88,6 +88,12 @@ filtered-empty states and the existing row actions for editing and deleting.
 - WHEN the ledger renders
 - THEN that cell shows an explicit placeholder
 
+#### Scenario: A status filter changes what the total counts
+- GIVEN the ledger is filtered to one status
+- WHEN it renders its closing total
+- THEN the total is the API's figure for that status, labelled with it
+- AND where the API returns no such figure, no total line is shown
+
 #### Scenario: The filter matches nothing
 - GIVEN a category filter matching no expense
 - WHEN the ledger renders

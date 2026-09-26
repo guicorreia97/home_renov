@@ -2,8 +2,7 @@ import { Button } from '../../components/Button'
 import { useFormat, useTranslation, type MessageKey, type TranslateFn } from '../../i18n'
 import type { FailureKind } from '../../lib/apiFailure'
 import type { BudgetSummary, Money, SignedMoney } from '../../types'
-import type { RemainingConclusion, RemainingConclusionTone } from './RemainingBudgetConclusion'
-import { RemainingConclusionBlock } from './RemainingBudgetConclusion'
+import { buildRemainingConclusion, RemainingConclusionBlock } from './RemainingBudgetConclusion'
 
 export interface BudgetSummaryStripProps {
   summary: BudgetSummary | null
@@ -49,7 +48,7 @@ function FigureRow({ figures }: { figures: Figure[] }) {
         <div key={figure.label}>
           <dt className="text-label text-muted">{figure.label}</dt>
           <dd
-            className={`mt-1 text-numeric tabular ${
+            className={`mt-1 text-numeric font-mono tabular ${
               figure.value === '—'
                 ? 'text-faint'
                 : figure.tone
@@ -101,33 +100,6 @@ function buildSpendFigures(summary: BudgetSummary, formatMoney: FormatMoneyFn, t
   ]
 }
 
-/** Builds the closing "remaining budget" figure, or null when there is no budget to close against. */
-function buildRemainingConclusion(
-  summary: BudgetSummary,
-  formatMoney: FormatMoneyFn,
-  t: TranslateFn,
-): RemainingConclusion | null {
-  if (summary.planned_budget === null || summary.remaining_budget === null) {
-    return null
-  }
-  const percent = summary.budget_used_percent
-  // Red before the money is gone, not after: at 90% the remaining budget is
-  // small enough that the next expense is likely to break it, which is the
-  // point at which the user needs to act.
-  const tone: RemainingConclusionTone =
-    summary.over_budget || (percent !== null && percent >= 90)
-      ? 'danger'
-      : percent !== null && percent >= 80
-        ? 'warning'
-        : 'success'
-  return {
-    label: t(summary.over_budget ? 'budget.summary.overBudget' : 'budget.summary.remaining'),
-    amount: formatMoney(summary.remaining_budget, summary.currency),
-    percent,
-    tone,
-  }
-}
-
 /** The top-of-screen totals, plus the entry point into the budget settings modal. */
 export function BudgetSummaryStrip({
   summary,
@@ -168,7 +140,7 @@ export function BudgetSummaryStrip({
         {summary && (
           <div className="flex flex-col gap-4">
             <div>
-              <p className="text-table-head text-muted uppercase">{t('budget.summary.targetsHeading')}</p>
+              <p className="text-micro font-mono text-muted uppercase">{t('budget.summary.targetsHeading')}</p>
               <div className="mt-2">
                 <FigureRow figures={buildTargetFigures(summary, formatMoney, t)} />
               </div>
@@ -180,7 +152,7 @@ export function BudgetSummaryStrip({
             </div>
 
             <div className="border-t border-border pt-4">
-              <p className="text-table-head text-muted uppercase">{t('budget.summary.spendHeading')}</p>
+              <p className="text-micro font-mono text-muted uppercase">{t('budget.summary.spendHeading')}</p>
               <div className="mt-2">
                 <FigureRow figures={buildSpendFigures(summary, formatMoney, t)} />
               </div>

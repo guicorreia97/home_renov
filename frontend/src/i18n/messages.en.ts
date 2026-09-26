@@ -7,10 +7,13 @@
  * missing from the other a compile error (see design.md, decision 2).
  *
  * Flat dotted keys, not nested objects — an orphaned key is one `grep` away.
- * See design.md, decision 3. Namespaces: `app.*` (the shell), `expenses.*`
+ * See design.md, decision 3. Namespaces: `app.*` (the health-check gate and
+ * top bar), `shell.*` (the app shell: sidebar, header, tabs), `expenses.*`
  * (the screen, table, filters), `expense.*` (one expense: its form, its
  * enum labels, its delete dialog, its validation), `budget.*` (the summary
- * strip, the settings modal, its validation).
+ * strip, the settings modal, its validation, and its two other tabs:
+ * `budget.view.*` for the works budget's category breakdown and
+ * `budget.profit.*` for the profit projection).
  */
 export const en = {
   // --- app.* — the shell ----------------------------------------------------
@@ -43,6 +46,8 @@ export const en = {
   'expenses.filter.allCategories': 'All categories',
   'expenses.error.network': 'Could not reach the API.',
   'expenses.error.server': 'The API returned an unexpected error.',
+  'expenses.table.header.invoiceReference': 'Document reference',
+  'expenses.table.noInvoiceReference': 'No reference',
 
   // --- expense.* — one expense: form, delete dialog, validation -------------
   'expense.field.description': 'Description',
@@ -123,6 +128,8 @@ export const en = {
   'budget.summary.expensesRecorded': 'Expenses recorded',
   'budget.summary.totalPaid': 'Total paid',
   'budget.summary.totalCommitted': 'Total committed',
+  'budget.summary.totalPlanned': 'Total planned',
+  'budget.summary.totalPending': 'Total pending',
   'budget.summary.totalForecast': 'Total forecast',
   'budget.summary.projectedProfit': 'Projected profit',
   'budget.summary.remaining': 'Remaining budget',
@@ -139,6 +146,39 @@ export const en = {
   'budget.error.server': 'The API returned an unexpected error.',
   'budget.error.notANumber': '{field} must be a non-negative number, e.g. 45000 or 45000.50.',
   'budget.error.tooLarge': '{field} is too large.',
+
+  // --- shell.* — the app shell: sidebar, header, tabs -----------------------
+  'shell.sidebar.categoriesHeading': 'Categories',
+  'shell.sidebar.clearFilter': 'Clear filter',
+  'shell.sidebar.loading': 'Loading categories…',
+  'shell.sidebar.empty': 'No spend recorded yet.',
+  'shell.sidebar.footer.noBudget': 'No budget is set yet. Set one to track what remains.',
+  'shell.header.assumptionUnset': 'Not set',
+  'shell.header.overBudgetPill': 'Over budget',
+  'shell.header.withinBudgetPill': 'Within budget',
+  'shell.header.editTargets': 'Edit targets',
+  'shell.tabs.label': 'Views',
+  'shell.tab.budget': 'Works budget',
+  'shell.tab.ledger': 'Expense ledger',
+  'shell.tab.profit': 'Profit projection',
+
+  // --- budget.view.* — the works budget tab: category breakdown -------------
+  // `{forecast}` and `{planned}` arrive pre-formatted by `useFormat`, so the
+  // sentence never builds a currency string by hand.
+  'budget.view.overrunMessage': 'Forecast spend of {forecast} has passed the planned budget of {planned}.',
+  'budget.view.columnCommitted': 'Committed',
+  'budget.view.empty':
+    'No expenses recorded yet. Add the first one to see the works budget broken down by category.',
+  'budget.view.emptyFiltered': 'No expenses match the selected category.',
+
+  // --- budget.profit.* — the profit projection tab ---------------------------
+  'budget.profit.margin': 'Margin',
+  'budget.profit.returnOnCost': 'Return on cost',
+  'budget.profit.breakEven': 'Break-even sale price',
+  'budget.profit.noTarget': 'No target sale price is set yet. Set one to see the projected profit.',
+  // `{label}` is another catalogue value (e.g. "Purchase price"), so the two
+  // never drift apart the way two independent literal strings could.
+  'budget.profit.less': 'Less: {label}',
 } as const
 
 export type MessageKey = keyof typeof en

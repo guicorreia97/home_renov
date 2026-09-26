@@ -65,30 +65,42 @@ export default {
 
     borderRadius: {
       none: '0px',
-      DEFAULT: '8px',
-      input: '8px',
-      button: '8px',
-      card: '12px',
+      DEFAULT: '7px',
+      input: '7px',
+      button: '7px',
+      card: '10px',
       pill: '999px',
       full: '999px',
     },
 
     fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
+      sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+      // Every figure is mono so columns scan: amounts, percentages, table
+      // dates, and the uppercase micro-labels above them.
+      mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
     },
 
     // Each role from the guide's type scale carries its own size, line-height,
     // weight and tracking, so `text-page-title` is the entire declaration and
     // there is no way to apply the size while forgetting the tracking.
     fontSize: {
-      'page-title': ['28px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '-0.02em' }],
-      section: ['20px', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '-0.01em' }],
-      'card-title': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
-      body: ['15px', { lineHeight: '1.6', fontWeight: '400' }],
-      label: ['13px', { lineHeight: '1.4', fontWeight: '500' }],
-      numeric: ['24px', { lineHeight: '1.2', fontWeight: '600' }],
-      // Table headers: 13px uppercase with wider tracking.
-      'table-head': ['13px', { lineHeight: '1.4', fontWeight: '500', letterSpacing: '0.04em' }],
+      'page-title': ['22px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '-0.02em' }],
+      section: ['16px', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '-0.01em' }],
+      'card-title': ['14px', { lineHeight: '1.4', fontWeight: '600' }],
+      body: ['13px', { lineHeight: '1.5', fontWeight: '400' }],
+      label: ['12.5px', { lineHeight: '1.4', fontWeight: '500' }],
+      numeric: ['22px', { lineHeight: '1.2', fontWeight: '600' }],
+      // A figure in a table cell or a KPI value. Mono, tabular, 13px.
+      figure: ['13px', { lineHeight: '1.4', fontWeight: '500' }],
+      // The one place type goes below 12.5px, and only here: uppercase,
+      // letterspaced mono micro-labels — column heads and KPI captions, never
+      // prose. See "The 11px floor" in docs/design-system-guide.md.
+      micro: ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.08em' }],
+      // Sentence-cased table headers, and therefore held to the 12.5px prose
+      // floor — NOT the 11px micro-label relaxation, which is only for
+      // uppercase letterspaced mono. Table column heads are micro-labels
+      // (`text-micro font-mono uppercase`), per the guide's Table component.
+      'table-head': ['12.5px', { lineHeight: '1.4', fontWeight: '500', letterSpacing: '0.04em' }],
     },
 
     extend: {
@@ -101,6 +113,11 @@ export default {
       },
       minWidth: {
         field: '160px',
+      },
+      // Fixed app-shell sidebar width — not a min/max, an exact structural
+      // constant, so it lives under `width` rather than `minWidth`.
+      width: {
+        sidebar: '258px',
       },
       // Dark UIs separate layers with surface lightness, not shadow. The single
       // allowed shadow is reserved for genuinely floating elements.

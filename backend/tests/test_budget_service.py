@@ -183,7 +183,7 @@ def test_summary_projected_profit_subtracts_purchase_price_and_forecast() -> Non
     assert summary.projected_profit == Decimal("150000.00")
 
 
-def test_summary_by_category_excludes_planned_expenses() -> None:
+def test_summary_by_category_amount_excludes_planned_expenses() -> None:
     expenses = [
         make_expense("100.00", ExpenseStatus.PAID, ExpenseCategory.MATERIALS),
         make_expense("50.00", ExpenseStatus.PENDING, ExpenseCategory.MATERIALS),
@@ -193,9 +193,135 @@ def test_summary_by_category_excludes_planned_expenses() -> None:
 
     summary = service.summary()
 
-    assert len(summary.by_category) == 1
-    assert summary.by_category[0].category == ExpenseCategory.MATERIALS
-    assert summary.by_category[0].amount == Decimal("150.00")
+    rows = {row.category: row for row in summary.by_category}
+    assert rows[ExpenseCategory.MATERIALS].amount == Decimal("150.00")
+    assert rows[ExpenseCategory.LABOUR].amount == Decimal("0.00")
+
+
+def test_summary_by_category_lists_a_planned_only_category() -> None:
+    expenses = [make_expense("25.00", ExpenseStatus.PLANNED, ExpenseCategory.LABOUR)]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    assert [row.category for row in summary.by_category] == [ExpenseCategory.LABOUR]
+    assert summary.by_category[0].planned == Decimal("25.00")
+    assert summary.by_category[0].amount == Decimal("0.00")
+
+
+def test_summary_by_category_splits_each_category_by_status() -> None:
+    expenses = [
+        make_expense("100.00", ExpenseStatus.PAID, ExpenseCategory.MATERIALS),
+        make_expense("50.00", ExpenseStatus.PENDING, ExpenseCategory.MATERIALS),
+        make_expense("25.00", ExpenseStatus.PLANNED, ExpenseCategory.MATERIALS),
+    ]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    row = summary.by_category[0]
+    assert row.paid == Decimal("100.00")
+    assert row.pending == Decimal("50.00")
+    assert row.planned == Decimal("25.00")
+    assert row.amount == Decimal("150.00")
+
+
+def test_summary_by_category_reconciles_with_the_grand_totals() -> None:
+    expenses = [
+        make_expense("100.00", ExpenseStatus.PAID, ExpenseCategory.MATERIALS),
+        make_expense("50.00", ExpenseStatus.PENDING, ExpenseCategory.LABOUR),
+        make_expense("25.00", ExpenseStatus.PLANNED, ExpenseCategory.APPLIANCES),
+    ]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    rows = summary.by_category
+    assert sum(row.planned for row in rows) == summary.total_planned
+    assert sum(row.paid for row in rows) == summary.total_paid
+    assert sum(row.pending for row in rows) == summary.total_committed - summary.total_paid
+    assert sum(row.planned + row.pending + row.paid for row in rows) == summary.total_forecast
+
+
+def test_summary_category_shares_are_percentages_of_committed_spend() -> None:
+    expenses = [
+        make_expense("750.00", ExpenseStatus.PAID, ExpenseCategory.MATERIALS),
+        make_expense("250.00", ExpenseStatus.PAID, ExpenseCategory.LABOUR),
+    ]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    shares = {row.category: row.share for row in summary.by_category}
+    assert shares[ExpenseCategory.MATERIALS] == 75.0
+    assert shares[ExpenseCategory.LABOUR] == 25.0
+
+
+def test_summary_category_share_is_zero_when_nothing_is_committed() -> None:
+    expenses = [make_expense("25.00", ExpenseStatus.PLANNED, ExpenseCategory.LABOUR)]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    assert summary.by_category[0].share == 0.0
+
+
+def test_summary_profitability_figures_are_none_without_targets() -> None:
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(), "EUR")
+
+    summary = service.summary()
+
+    assert summary.margin_percent is None
+    assert summary.return_on_cost_percent is None
+    assert summary.break_even_sale_price is None
+
+
+def test_summary_profitability_figures_are_derived_from_the_targets() -> None:
+    budgets = FakeBudgetRepository()
+    budgets.update(
+        BudgetUpdate(target_sale_price=Decimal("465000"), purchase_price=Decimal("300000"))
+    )
+    expenses = [make_expense("120000.00", ExpenseStatus.PAID)]
+    service = BudgetService(budgets, FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    assert summary.projected_profit == Decimal("45000.00")
+    assert summary.break_even_sale_price == Decimal("420000.00")
+    assert summary.margin_percent == 9.68
+    assert summary.return_on_cost_percent == 10.71
+
+
+def test_summary_break_even_is_reported_without_a_target_sale_price() -> None:
+    budgets = FakeBudgetRepository()
+    budgets.update(BudgetUpdate(purchase_price=Decimal("300000")))
+    expenses = [make_expense("120000.00", ExpenseStatus.PAID)]
+    service = BudgetService(budgets, FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    assert summary.break_even_sale_price == Decimal("420000.00")
+    assert summary.margin_percent is None
+
+
+def test_summary_break_even_is_none_without_a_purchase_price() -> None:
+    expenses = [make_expense("5000.00", ExpenseStatus.PAID)]
+    service = BudgetService(FakeBudgetRepository(), FakeExpenseRepository(expenses), "EUR")
+
+    summary = service.summary()
+
+    assert summary.total_forecast == Decimal("5000.00")
+    assert summary.break_even_sale_price is None
+
+
+def test_summary_return_on_cost_is_none_against_a_zero_cost_base() -> None:
+    budgets = FakeBudgetRepository()
+    budgets.update(BudgetUpdate(target_sale_price=Decimal("465000")))
+    service = BudgetService(budgets, FakeExpenseRepository(), "EUR")
+
+    summary = service.summary()
+
+    assert summary.return_on_cost_percent is None
 
 
 def test_summary_expense_count_matches_number_of_expenses() -> None:

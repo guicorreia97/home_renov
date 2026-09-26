@@ -1,4 +1,5 @@
-import { useFormat, useTranslation } from '../../i18n'
+import { useFormat, useTranslation, type TranslateFn } from '../../i18n'
+import type { BudgetSummary, Money, SignedMoney } from '../../types'
 
 export type RemainingConclusionTone = 'success' | 'warning' | 'danger'
 
@@ -7,6 +8,40 @@ export interface RemainingConclusion {
   amount: string
   percent: number | null
   tone: RemainingConclusionTone
+}
+
+type FormatMoneyFn = (amount: Money | SignedMoney, currency: string) => string
+
+/**
+ * Builds the closing "remaining budget" figure, or `null` when there is no
+ * budget to close against. Shared by `BudgetSummaryStrip` and `BudgetView` so
+ * the thresholds — under 80% success, 80–90% warning, 90%+ or `over_budget`
+ * danger (docs/design-system-guide.md) — live in exactly one place.
+ */
+export function buildRemainingConclusion(
+  summary: BudgetSummary,
+  formatMoney: FormatMoneyFn,
+  t: TranslateFn,
+): RemainingConclusion | null {
+  if (summary.planned_budget === null || summary.remaining_budget === null) {
+    return null
+  }
+  const percent = summary.budget_used_percent
+  // Red before the money is gone, not after: at 90% the remaining budget is
+  // small enough that the next expense is likely to break it, which is the
+  // point at which the user needs to act.
+  const tone: RemainingConclusionTone =
+    summary.over_budget || (percent !== null && percent >= 90)
+      ? 'danger'
+      : percent !== null && percent >= 80
+        ? 'warning'
+        : 'success'
+  return {
+    label: t(summary.over_budget ? 'budget.summary.overBudget' : 'budget.summary.remaining'),
+    amount: formatMoney(summary.remaining_budget, summary.currency),
+    percent,
+    tone,
+  }
 }
 
 const toneTextClass: Record<RemainingConclusionTone, string> = {
@@ -40,7 +75,7 @@ export function RemainingConclusionBlock({ conclusion }: { conclusion: Remaining
           </p>
         )}
       </div>
-      <p className={`mt-1 text-numeric tabular ${toneTextClass[conclusion.tone]}`}>
+      <p className={`mt-1 text-numeric font-mono tabular ${toneTextClass[conclusion.tone]}`}>
         {conclusion.amount}
       </p>
       <div

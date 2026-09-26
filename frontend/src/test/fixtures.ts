@@ -45,8 +45,20 @@ export function aSummary(overrides: Partial<BudgetSummary> = {}): BudgetSummary 
     budget_used_percent: 2.47,
     over_budget: false,
     projected_profit: '78765.50',
+    margin_percent: 30.29,
+    return_on_cost_percent: 43.46,
+    break_even_sale_price: '181234.50',
     expense_count: 1,
-    by_category: [{ category: 'materials', amount: '1234.50' }],
+    by_category: [
+      {
+        category: 'materials',
+        amount: '1234.50',
+        planned: '0.00',
+        pending: '0.00',
+        paid: '1234.50',
+        share: 100,
+      },
+    ],
     ...overrides,
   }
 }
