@@ -85,15 +85,15 @@ export function BudgetView({
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
-                <th className="pb-2 text-left text-table-head text-muted">
+                <th className="pb-2 text-left text-micro font-mono uppercase text-muted">
                   {t('expenses.table.header.description')}
                 </th>
-                <th className="pb-2 text-left text-table-head text-muted">
+                <th className="pb-2 text-left text-micro font-mono uppercase text-muted">
                   {t('expenses.table.header.incurredOn')}
                 </th>
-                <th className="pb-2 text-right text-table-head text-muted">{t('expense.status.planned')}</th>
-                <th className="pb-2 text-right text-table-head text-muted">{t('budget.view.columnCommitted')}</th>
-                <th className="pb-2 text-right text-table-head text-muted">{t('expense.status.paid')}</th>
+                <th className="pb-2 text-right text-micro font-mono uppercase text-muted">{t('expense.status.planned')}</th>
+                <th className="pb-2 text-right text-micro font-mono uppercase text-muted">{t('budget.view.columnCommitted')}</th>
+                <th className="pb-2 text-right text-micro font-mono uppercase text-muted">{t('expense.status.paid')}</th>
               </tr>
             </thead>
             <tbody>

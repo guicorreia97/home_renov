@@ -100,9 +100,9 @@ Branch with `make branch NAME=feat/<slug>`. Every commit carries
 
 ## 5. Close out
 
-- [ ] 5.1 Run `make check` from the repo root on each branch; verify it passes
+- [x] 5.1 Run `make check` from the repo root on each branch; verify it passes
       before the branch is pushed
-- [ ] 5.2 Spawn the `reviewer` sub-agent on each branch diff before opening a PR
+- [x] 5.2 Spawn the `reviewer` sub-agent on each branch diff before opening a PR
 - [ ] 5.3 Walk the app by hand with `make run`: switch language, filter from the
       rail, open both modals, visit all three tabs
 - [ ] 5.4 Clear `planned_budget` and `target_sale_price` via `PUT /budget`;

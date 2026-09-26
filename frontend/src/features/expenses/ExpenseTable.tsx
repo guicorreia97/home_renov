@@ -98,12 +98,12 @@ export function ExpenseTable({
             {HEADER_KEYS.map((key, index) => (
               <th
                 key={key}
-                className={`pb-2 text-table-head text-muted ${index === lastHeaderIndex ? 'text-right' : 'text-left'}`}
+                className={`pb-2 text-micro font-mono uppercase text-muted ${index === lastHeaderIndex ? 'text-right' : 'text-left'}`}
               >
                 {t(key)}
               </th>
             ))}
-            <th className="pb-2 text-table-head text-muted" aria-hidden="true" />
+            <th className="pb-2 text-micro font-mono uppercase text-muted" aria-hidden="true" />
           </tr>
         </thead>
         <tbody>

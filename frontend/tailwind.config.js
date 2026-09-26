@@ -98,8 +98,8 @@ export default {
       micro: ['11px', { lineHeight: '1.3', fontWeight: '500', letterSpacing: '0.08em' }],
       // Sentence-cased table headers, and therefore held to the 12.5px prose
       // floor — NOT the 11px micro-label relaxation, which is only for
-      // uppercase letterspaced mono. The ledger's headers adopt `micro` when
-      // feat/flip-desk-panels restyles them into uppercase mono column heads.
+      // uppercase letterspaced mono. Table column heads are micro-labels
+      // (`text-micro font-mono uppercase`), per the guide's Table component.
       'table-head': ['12.5px', { lineHeight: '1.4', fontWeight: '500', letterSpacing: '0.04em' }],
     },
 
