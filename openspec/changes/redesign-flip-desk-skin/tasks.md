@@ -77,25 +77,25 @@ Branch with `make branch NAME=feat/<slug>`. Every commit carries
 
 ## 4. `feat/flip-desk-panels` — the three views
 
-- [ ] 4.1 Build the works budget view: headline figures, expenses grouped by
+- [x] 4.1 Build the works budget view: headline figures, expenses grouped by
       category, group subtotals and a grand total, all read from the summary;
       verify a test asserts no arithmetic is applied to a `Money` value
-- [ ] 4.2 Place each expense's amount in the column matching its status; verify
+- [x] 4.2 Place each expense's amount in the column matching its status; verify
       an expense appears in exactly one of planned, committed and paid
-- [ ] 4.3 Add the overrun callout on the API's over-budget flag; verify it is
+- [x] 4.3 Add the overrun callout on the API's over-budget flag; verify it is
       absent when the flag is false
-- [ ] 4.4 Restyle `ExpenseTable.tsx` into the ledger with the document reference
+- [x] 4.4 Restyle `ExpenseTable.tsx` into the ledger with the document reference
       and payment-method columns; verify the loading, error, empty and
       filtered-empty states and the row actions all still work
-- [ ] 4.5 Verify an expense with no `invoice_reference` renders an explicit
+- [x] 4.5 Verify an expense with no `invoice_reference` renders an explicit
       placeholder, not an empty cell
-- [ ] 4.6 Build the profit view: headline figures, the waterfall ending in
+- [x] 4.6 Build the profit view: headline figures, the waterfall ending in
       `projected_profit`, then margin, return on cost and break-even
-- [ ] 4.7 Verify the no-target-sale-price case states its emptiness and shows no
+- [x] 4.7 Verify the no-target-sale-price case states its emptiness and shows no
       profit, margin or return figure in place of a zero
-- [ ] 4.8 Verify a negative projected profit renders in the danger colour with
+- [x] 4.8 Verify a negative projected profit renders in the danger colour with
       its sign
-- [ ] 4.9 Verify the filtered ledger's total comes from the API, not from
+- [x] 4.9 Verify the filtered ledger's total comes from the API, not from
       summing the visible rows
 
 ## 5. Close out

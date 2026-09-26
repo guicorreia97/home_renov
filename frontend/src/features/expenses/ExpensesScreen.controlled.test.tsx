@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
+import { formatMoney } from '../../lib/format'
 import { aBudget, aSummary, anExpense } from '../../test/fixtures'
-import { renderWithLocale } from '../../test/renderWithLocale'
+import { folded, renderWithLocale } from '../../test/renderWithLocale'
 import { stubApi } from '../../test/setup'
 import ExpensesScreen from './ExpensesScreen'
 import type { ExpensesData } from './useExpensesData'
@@ -51,5 +52,63 @@ describe('ExpensesScreen — the data prop decides who owns the add-expense butt
 
     expect(await screen.findByText('Kitchen worktop')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: t('expenses.add') })).not.toBeInTheDocument()
+  })
+})
+
+// 4.9 — the filtered ledger's total comes from the API, not from summing the
+// visible rows.
+describe('ExpensesScreen — the embedded ledger’s total is read from the summary', () => {
+  it('switches to the API’s own figure for a status filter, never a sum of the visible rows', async () => {
+    const planned = anExpense({ id: 'exp-1', description: 'Kitchen worktop', status: 'planned', amount: '111.00' })
+    const paid = anExpense({ id: 'exp-2', description: 'Sofa', status: 'paid', amount: '222.00' })
+    // Deliberately neither 111 + 222 nor 111: proves each figure shown is the
+    // field the summary supplied, not a sum of whichever rows are visible.
+    const summary = aSummary({ total_committed: '999.99', total_planned: '888.88', by_category: [] })
+    const data = {
+      expenses: [planned, paid],
+      expensesLoading: false,
+      expensesError: null,
+      summary,
+      summaryLoading: false,
+      summaryError: null,
+      budget: aBudget(),
+      budgetLoading: false,
+      budgetError: null,
+      loading: false,
+      budgetSaving: false,
+      budgetSaveError: null,
+      refresh: () => {},
+      saveBudget: async () => true,
+    }
+
+    const { t, rerender } = renderWithLocale(
+      <ExpensesScreen
+        data={data}
+        filters={{ status: 'all', category: 'all' }}
+        onFiltersChange={() => {}}
+      />,
+    )
+
+    await screen.findByText('Kitchen worktop')
+    expect(screen.getByText(folded(formatMoney('999.99', summary.currency, 'en')))).toBeInTheDocument()
+
+    // Narrow the status filter — the visible rows shrink to one expense.
+    rerender(
+      <ExpensesScreen
+        data={data}
+        filters={{ status: 'planned', category: 'all' }}
+        onFiltersChange={() => {}}
+      />,
+    )
+
+    expect(screen.getByText('Kitchen worktop')).toBeInTheDocument()
+    expect(screen.queryByText('Sofa')).not.toBeInTheDocument()
+    // Only planned rows are visible, so the total is the API's planned figure,
+    // labelled as such — not committed spend, which counts none of these rows,
+    // and not 111.00 recomputed from the one row left on screen.
+    expect(screen.queryByText(t('budget.summary.totalCommitted'))).not.toBeInTheDocument()
+    const totalLabel = screen.getByText(t('budget.summary.totalPlanned'))
+    const totalValue = totalLabel.parentElement?.querySelector('span:last-child')
+    expect(folded(totalValue?.textContent ?? '')).toBe(folded(formatMoney('888.88', summary.currency, 'en')))
   })
 })

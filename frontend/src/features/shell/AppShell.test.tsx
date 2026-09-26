@@ -51,7 +51,12 @@ describe('AppShell', () => {
 
     await user.click(screen.getByRole('tab', { name: t('shell.tab.budget') }))
     expect(screen.getByRole('tab', { name: t('shell.tab.budget') })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.queryByText('Sofa')).not.toBeInTheDocument()
+    // The budget tab is a live view of the same filter, not a blank panel: it
+    // shows the labour group (and Sofa, the labour expense within it) and
+    // nothing from the materials group.
+    expect(await screen.findByText('Sofa')).toBeInTheDocument()
+    expect(screen.queryByText('Kitchen worktop')).not.toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: /materials/i })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: t('shell.tab.ledger') }))
     expect(screen.getByRole('button', { name: t('expense.category.labour') })).toHaveAttribute(

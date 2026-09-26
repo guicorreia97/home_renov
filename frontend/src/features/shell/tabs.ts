@@ -1,13 +1,6 @@
 import type { MessageKey } from '../../i18n'
 
-/**
- * The three views the desk is divided into. Only `ledger` has content in this
- * change — it hosts the existing `ExpensesScreen` unmodified. `budget` and
- * `profit` are real, selectable tabs with no panel behind them yet: building
- * one against data the API cannot supply would be the mock data the design
- * explicitly rejects (design.md, Decision 4). They arrive in
- * `feat/flip-desk-panels`.
- */
+/** The three views the desk is divided into: the works budget, the ledger and the profit projection. */
 export type ShellTabId = 'budget' | 'ledger' | 'profit'
 
 export interface ShellTab {

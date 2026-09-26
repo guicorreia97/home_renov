@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { Locale } from '../../i18n'
+import { formatMoney } from '../../lib/format'
 import { anExpense } from '../../test/fixtures'
-import { renderWithLocale } from '../../test/renderWithLocale'
+import { folded, renderWithLocale } from '../../test/renderWithLocale'
 import { ExpenseTable } from './ExpenseTable'
 
 function renderTable(
@@ -124,6 +125,19 @@ describe('ExpenseTable', () => {
 
     expect(screen.getByText('Tiles')).toBeInTheDocument()
     expect(screen.queryByText('Worktop')).not.toBeInTheDocument()
+  })
+
+  it('shows no total line unless the caller supplies one', () => {
+    const { t } = renderTable()
+
+    expect(screen.queryByText(t('budget.summary.totalCommitted'))).not.toBeInTheDocument()
+  })
+
+  it('renders the caller-supplied total verbatim, under the caller-supplied label', () => {
+    const { t } = renderTable({ total: { amount: '4321.00', label: 'budget.summary.totalPaid' } })
+
+    expect(screen.getByText(t('budget.summary.totalPaid'))).toBeInTheDocument()
+    expect(screen.getByText(folded(formatMoney('4321.00', 'EUR', 'en')))).toBeInTheDocument()
   })
 
   it('renders every header and the empty state in Portuguese', () => {

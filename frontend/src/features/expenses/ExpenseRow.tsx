@@ -23,13 +23,19 @@ export function ExpenseRow({ expense, currency, onEdit, onDelete }: ExpenseRowPr
 
   return (
     <tr className="border-b border-border">
+      <td className="py-3 pr-4 text-figure font-mono text-muted">{formatDate(expense.incurred_on)}</td>
       <td className="py-3 pr-4 text-body text-text">
         {expense.description}
         {expense.room && <span className="ml-2 text-label text-muted">{expense.room}</span>}
       </td>
-      <td className="py-3 pr-4 text-body text-muted">{t(`expense.category.${expense.category}`)}</td>
+      <td className="py-3 pr-4 text-body text-muted">{t(`expense.paymentMethod.${expense.payment_method}`)}</td>
       <td className="py-3 pr-4 text-body text-muted">{expense.payee}</td>
-      <td className="py-3 pr-4 text-figure font-mono text-muted">{formatDate(expense.incurred_on)}</td>
+      <td className="py-3 pr-4 text-body text-muted">
+        {expense.invoice_reference ?? (
+          <span className="text-faint">{t('expenses.table.noInvoiceReference')}</span>
+        )}
+      </td>
+      <td className="py-3 pr-4 text-body text-muted">{t(`expense.category.${expense.category}`)}</td>
       <td className="py-3 pr-4">
         <Badge tone={statusTone[expense.status]}>{t(`expense.status.${expense.status}`)}</Badge>
       </td>

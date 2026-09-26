@@ -9,6 +9,7 @@ import { ExpenseFilters } from './ExpenseFilters'
 import { ExpenseFormModal } from './ExpenseFormModal'
 import { ExpenseTable } from './ExpenseTable'
 import type { ExpenseFilters as ExpenseFiltersValue, ExpenseFormValues } from './formTypes'
+import { ledgerTotal } from './ledgerTotal'
 import { useExpensesData, type ExpensesData } from './useExpensesData'
 import { formValuesFromExpense } from './validation'
 
@@ -145,6 +146,12 @@ function ExpensesScreenView({ data, filters, onFiltersChange, showAddButton }: E
   }, [expenses, filters])
 
   const currency = summary?.currency ?? FALLBACK_CURRENCY
+  // Only the standalone screen (no shared `data` prop, so `showAddButton` is
+  // true) carries this strip: the app shell already shows the same targets
+  // in `DeskHeader` and the same remaining-budget conclusion in the sidebar
+  // footer, and the works budget tab now carries the spend totals too — see
+  // the "absorb what is genuinely duplicated" note on the shell follow-up.
+  const embedded = !showAddButton
 
   return (
     <div className="mx-auto max-w-content px-6 py-12">
@@ -157,18 +164,20 @@ function ExpensesScreenView({ data, filters, onFiltersChange, showAddButton }: E
         )}
       </div>
 
-      <div className="mt-6">
-        <BudgetSummaryStrip
-          summary={summary}
-          summaryLoading={summaryLoading}
-          summaryError={summaryError}
-          budgetLoading={budgetLoading}
-          budgetError={budgetError}
-          onEditBudget={() => setModal({ kind: 'budget' })}
-        />
-      </div>
+      {!embedded && (
+        <div className="mt-6">
+          <BudgetSummaryStrip
+            summary={summary}
+            summaryLoading={summaryLoading}
+            summaryError={summaryError}
+            budgetLoading={budgetLoading}
+            budgetError={budgetError}
+            onEditBudget={() => setModal({ kind: 'budget' })}
+          />
+        </div>
+      )}
 
-      <div className="mt-8">
+      <div className={embedded ? 'mt-6' : 'mt-8'}>
         <ExpenseFilters filters={filters} onChange={onFiltersChange} />
       </div>
 
@@ -182,6 +191,10 @@ function ExpensesScreenView({ data, filters, onFiltersChange, showAddButton }: E
           onDelete={(expense) => setModal({ kind: 'delete', expense })}
           onAddFirst={() => setModal({ kind: 'form', editing: null })}
           onRetry={refresh}
+          // Only shown when embedded: the standalone screen already states
+          // this exact figure in `BudgetSummaryStrip` above, and showing it
+          // twice would be the duplication the shell follow-up removed.
+          total={embedded ? ledgerTotal(summary, filters.category, filters.status) : undefined}
         />
       </div>
 

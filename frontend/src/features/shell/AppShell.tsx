@@ -4,9 +4,10 @@ import type { ExpenseFilters as ExpenseFiltersValue } from '../expenses/formType
 import { ExpenseFormModal } from '../expenses/ExpenseFormModal'
 import ExpensesScreen, { DEFAULT_FILTERS, EMPTY_FORM_VALUES } from '../expenses/ExpensesScreen'
 import { useExpensesData } from '../expenses/useExpensesData'
-import { useTranslation } from '../../i18n'
 import type { ExpenseCategory } from '../../types'
+import { BudgetView } from './BudgetView'
 import { DeskHeader } from './DeskHeader'
+import { ProfitView } from './ProfitView'
 import { Sidebar } from './Sidebar'
 import { TabNav } from './TabNav'
 import { DEFAULT_SHELL_TAB, panelElementId, tabElementId, type ShellTabId } from './tabs'
@@ -26,13 +27,14 @@ type ShellModal = { kind: 'closed' } | { kind: 'expense' } | { kind: 'budget' }
  * state through its `data` prop instead of loading a second one.
  */
 export function AppShell() {
-  const { t } = useTranslation()
   // The one live call: its result is threaded into `ExpensesScreen` as the
   // `data` prop below, so the sidebar totals, the header assumptions and the
   // ledger table all read the same three requests instead of each mounting
   // its own copy of this hook (frontend-shell spec, "single source of truth").
   const expensesData = useExpensesData()
   const {
+    expenses,
+    expensesError,
     summary,
     summaryLoading,
     summaryError,
@@ -83,10 +85,27 @@ export function AppShell() {
             id={panelElementId(activeTab)}
             aria-labelledby={tabElementId(activeTab)}
           >
-            {activeTab === 'ledger' ? (
+            {activeTab === 'ledger' && (
               <ExpensesScreen data={expensesData} filters={filters} onFiltersChange={setFilters} />
-            ) : (
-              <p className="p-6 text-body text-muted">{t('shell.panel.notAvailable')}</p>
+            )}
+            {activeTab === 'budget' && (
+              <BudgetView
+                summary={summary}
+                summaryLoading={summaryLoading}
+                summaryError={summaryError}
+                expenses={expenses}
+                expensesError={expensesError}
+                selectedCategory={filters.category}
+                onAddExpense={() => setModal({ kind: 'expense' })}
+              />
+            )}
+            {activeTab === 'profit' && (
+              <ProfitView
+                summary={summary}
+                summaryLoading={summaryLoading}
+                summaryError={summaryError}
+                onEditTargets={() => setModal({ kind: 'budget' })}
+              />
             )}
           </div>
         </main>
