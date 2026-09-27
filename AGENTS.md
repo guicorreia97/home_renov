@@ -177,3 +177,6 @@ Append here when a mistake happens twice. Keep entries one line.
 - A test suite in the gate must survive a loaded machine. The frontend suite's
   5s default timeout failed under load with nothing broken; `testTimeout` in
   `frontend/vite.config.ts` is deliberate headroom, not a workaround.
+- A stacked PR opened against `main` lands every branch beneath it in one squash
+  (#11 swallowed #10). Don't stack; if you must, `--base <parent>` and
+  `rebase --onto`. → `docs/git-guide.md`, *Stacked branches*.
