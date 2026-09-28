@@ -211,10 +211,13 @@ Deleting when the *pull request is opened* is the wrong moment — that window i
 exactly when a PR needs a rebase, since branch protection requires the branch be
 up to date with `main`, and `-D` would discard anything not yet pushed.
 
-`[gone]` is also stricter than the `branch-status` states above, and catches a
-case they miss: a branch absorbed into a **larger** squash — a stacked PR that
-carried it — has a cumulative diff that no longer matches any single commit, so
-patch-id cannot see it. The deleted upstream does not care whose squash took it.
+`[gone]` has one blind spot, and `branch-status` shares it: a branch absorbed
+into a **larger** squash — a stacked PR that carried it. GitHub deletes only the
+head branch of the PR it merged, so the parents underneath keep their upstreams
+and never go `[gone]`; and their cumulative diffs match no single commit on
+`main`, so patch-id reports them `in progress`. Both tools miss them. Confirm by
+ancestry against the tip that was squashed, then delete by hand — see
+*Stacked branches* below.
 
 Dry run is the default because `-D` does not ask. `-d` is not the safer choice
 it appears to be: it refuses every squash-merged branch, which here is all of
@@ -223,6 +226,65 @@ them. If a remote branch somehow survives its merge:
 ```sh
 git push origin --delete <branch>
 ```
+
+## Stacked branches
+
+A stacked branch is one cut from another feature branch instead of from `main`,
+so it can start before its parent lands. **Avoid it.** Land the parent, then
+`make branch` the next one off the fresh `main`. Stacking fights squash-merge,
+and every rule below exists because of that conflict.
+
+**Why they fight.** A squash writes the branch's diff as one *new* commit. The
+branch's own commits never reach `main`, so git — which decides "already merged"
+by ancestry — still believes they are missing. Any branch that still holds them
+now carries a second copy of work `main` already has under a different hash.
+
+The Flip Desk redesign shows what that costs. Four branches were stacked —
+`summary-derived-totals` ← `shell` ← `panels`, with `tokens` merged into `shell`
+— and meant to land in the order tokens, summary, shell, panels:
+
+1. PR #10 opened `tokens → main`.
+2. PR #11 opened `panels → main` — its base was `main`, not `shell`, so its diff
+   was all four branches — and was squash-merged a minute later. The whole stack
+   landed as one commit, titled from the branch name (`Feat/flip desk panels`)
+   rather than as a Conventional Commit.
+3. #10 went `CONFLICTING`. `main` already held the tokens change plus later edits
+   to the same lines; with no ancestry linking the two, git saw rival edits, not
+   a newer version of one. #10 was closed as superseded.
+4. `tokens`, `shell` and `summary-derived-totals` kept their remote branches and
+   read `in progress` — see the blind spot under *Cleaning up*.
+
+No code was lost; the order, the one-commit-per-change history and the cleanup
+signals were. If you must stack anyway:
+
+- **Base each child PR on its parent**, `gh pr create --base <parent-branch>`,
+  never on `main`. Its diff is then only its own work, and it cannot land the
+  parent by accident. When the parent squash-merges, GitHub deletes the parent's
+  branch and retargets the child to `main`.
+- **Rebase onto a parent, never merge one in.** A merge commit inside a stack
+  leaves no single commit to cut at in the next step.
+- **After the parent lands, cut the child loose with `--onto`:**
+
+  ```sh
+  git fetch
+  git rebase --onto origin/main <old-parent-tip> <child>
+  git push --force-with-lease
+  ```
+
+  A plain `git rebase origin/main` replays the parent's commits too — `main`
+  holds only their squash — so they conflict or reapply as empty commits.
+  `<old-parent-tip>` is the parent's last commit *before* it merged; take it from
+  the PR page or `git reflog` if the branch is already gone.
+- **Check the squash dialog before merging.** The title must be a Conventional
+  Commit and the body must keep one `Change:` trailer — GitHub fills both from
+  the branch, not from this guide.
+- **Delete absorbed parents by hand.** Confirm each is an ancestor of the squashed
+  tip, then remove both copies:
+
+  ```sh
+  git merge-base --is-ancestor <parent> <squashed-tip> && echo contained
+  git branch -D <parent> && git push origin --delete <parent>
+  ```
 
 ## Stashes
 
